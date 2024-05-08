@@ -1,0 +1,17 @@
+#!/bin/bash
+export partition=core
+export prog=${*}
+export submit_script=submit.$$
+export JOB_NAME=${PWD##*/}
+cat > $submit_script << EOF
+#!/bin/bash
+#
+#SBATCH --job-name=$JOB_NAME
+#SBATCH --output=$JOB_NAME.%j.txt
+#SBATCH --partition=$partition
+#SBATCH --ntasks=16
+$prog
+rm  $submit_script
+EOF
+
+sbatch $submit_script
