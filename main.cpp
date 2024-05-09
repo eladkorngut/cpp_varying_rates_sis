@@ -35,14 +35,14 @@ void read_parameters(std::string& filename,std::fstream& parameters_file,int N,i
 
 struct network_topology{
 public:
-    double Alpha,Beta;
+    double Alpha,Beta,beta_cat;
     int k_max;
     std::vector<int> degree_in,degree_out;
     std::vector<std::vector<int>> Adjlist_in,Adjlist_out;
 
     network_topology(double Alpha,double Beta,int k_max,std::vector<int> &degree_in,std::vector<int> &degree_out,
-                     std::vector<std::vector<int>> &Adjlist_in,std::vector<std::vector<int>> &Adjlist_out): Alpha(Alpha),
-                                                                                                            Beta(Beta),k_max(k_max),degree_in(degree_in),degree_out(degree_out),Adjlist_in(Adjlist_in),Adjlist_out(Adjlist_out){}
+                     std::vector<std::vector<int>> &Adjlist_in,std::vector<std::vector<int>> &Adjlist_out,double beta_cat): Alpha(Alpha),
+                                                                                                            Beta(Beta),k_max(k_max),degree_in(degree_in),degree_out(degree_out),Adjlist_in(Adjlist_in),Adjlist_out(Adjlist_out),beta_cat(beta_cat){}
     void decrement_susc_neighbs(int k_in,int k_out,std::vector<int> &neighbs_in,std::vector<int> &neighbs_out,
                                 std::vector<std::vector<int>> &net_susceptible_nodes,std::vector<int> &infected_neighbors_in,
                                 std::vector<int> &infected_neighbors_out,std::vector<int> &s_m,std::vector<int> &positions
@@ -175,13 +175,17 @@ public:
     }
 
     std::pair<double,simulation_data > gillespie(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
-                                                 networks_dynamics &net_d,network_topology &net_t){
+                                                 networks_dynamics &net_d,network_topology &net_t,double cat_start,double cat_duration){
         double sim_time=0,r1,r2,s_m_sum=0;
         int m_in,m_out,node;
         while(*i_num_inf>0 && sim_time<tau){
             r1 = uniform_dist(gen);
             r2 = -std::log(uniform_dist(gen));
-            *i_avec_sum = (*i_num_inf)*net_t.Alpha+(*i_SI)*net_t.Beta;
+            if (sim_time>cat_start && sim_time<=cat_start+cat_duration)
+                *i_avec_sum = (*i_num_inf)*net_t.Alpha+(*i_SI)*net_t.beta_cat;
+            else
+                *i_avec_sum = (*i_num_inf)*net_t.Alpha+(*i_SI)*net_t.Beta;
+//            *i_avec_sum = (*i_num_inf)*net_t.Alpha+(*i_SI)*net_t.Beta;
             sim_time+=r2/(*i_avec_sum);
             //Pick a node, change its state and update the transition rates
             if (r1<(*i_num_inf)*net_t.Alpha/(*i_avec_sum)) {
@@ -260,14 +264,14 @@ std::string read_single_string_parameter(std::stringstream& ss,std::string& word
     return word;
 }
 
-std::tuple<int,int,int,int,double,double,double,double,double,int,double,double,int,std::string & ,std::string & >
+std::tuple<int,int,int,int,double,double,double,double,double,int,double,double,int,std::string & ,std::string &,double,double,double,double,double >
 read_parameters(std::string& filename,std::fstream& parameters_file) {
     // Read network parameters from python files
     std::string line;
     std::stringstream ss;
     std::string word;
     int N,sims,it,k,jump,network_number,new_trajectory_bin;
-    double x,lam,Alpha,Beta,tau,mf_solution;
+    double x,lam,Alpha,Beta,tau,mf_solution,start_cat_time,duration,beta_cat,eps_din,eps_dout;
     std::string prog,dir_path;
     parameters_file.open(filename);
     while (getline(parameters_file, line)) {
@@ -288,9 +292,14 @@ read_parameters(std::string& filename,std::fstream& parameters_file) {
         new_trajectory_bin = read_single_int_parameter(ss,word);
         prog=read_single_string_parameter(ss,word);
         dir_path=read_single_string_parameter(ss,word);
+        eps_din = read_single_double_parameter(ss,word);
+        eps_dout = read_single_double_parameter(ss,word);
+        start_cat_time = read_single_double_parameter(ss,word);
+        duration = read_single_double_parameter(ss,word);
+        beta_cat = read_single_double_parameter(ss,word);
     }
-    return std::tuple<int,int,int,int,double,double,int,double,double,int,double,double,int,std::string & ,std::string&>
-            (N,sims,it,k,x,lam,jump,Alpha,Beta,network_number,tau,mf_solution,new_trajectory_bin,prog,dir_path);
+    return std::tuple<int,int,int,int,double,double,int,double,double,int,double,double,int,std::string & ,std::string&,double,double,double,double,double>
+            (N,sims,it,k,x,lam,jump,Alpha,Beta,network_number,tau,mf_solution,new_trajectory_bin,prog,dir_path,eps_din,eps_dout,start_cat_time,duration,beta_cat);
 }
 
 void remove_infected_node(int node,std::vector<int> &infected_node,std::vector<int> &positions){
@@ -511,12 +520,13 @@ void inital_networks_stat(int N,double x,int sims,std::list<int>& num_inf,std::l
 
 
 double GillespieMC(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
-                   std::exponential_distribution<double> &exponential_dist,networks_dynamics &net_d,network_topology &net_t){
+                   std::exponential_distribution<double> &exponential_dist,networks_dynamics &net_d,
+                   network_topology &net_t,double cat_start,double cat_duration){
     simulation_data network(net_d);
     std::pair<double,simulation_data> data_sim_gillespie(0.0,network);
     double death=0.0;;
     while (!network.end(net_d)){
-        data_sim_gillespie = network.gillespie(tau,gen,uniform_dist,net_d,net_t);
+        data_sim_gillespie = network.gillespie(tau,gen,uniform_dist,net_d,net_t,cat_start,cat_duration);
         death= data_sim_gillespie.first;
         if (data_sim_gillespie.first>0.0){continue;} // The simulation was erased so network points to the next network
         ++network;
@@ -553,7 +563,8 @@ int main(int argc, char* argv[]) {
     int N=std::get<0>(parameter_list),sims=std::get<1>(parameter_list),it=std::get<2>(parameter_list),
             k=std::get<3>(parameter_list),jump=std::get<6>(parameter_list),network_number=std::get<9>(parameter_list),new_trajectory_bin=std::get<12>(parameter_list);
     double inital_inf_percent=std::get<4>(parameter_list),lam=std::get<5>(parameter_list),Alpha=std::get<7>(parameter_list)
-    ,Beta=std::get<8>(parameter_list),tau=std::get<10>(parameter_list),mf_solution=std::get<11>(parameter_list);
+    ,Beta=std::get<8>(parameter_list),tau=std::get<10>(parameter_list),mf_solution=std::get<11>(parameter_list),
+            cat_start=std::get<17>(parameter_list),cat_duration=std::get<18>(parameter_list),beta_cat=std::get<19>(parameter_list);
     std::string dir_path(std::get<13>(parameter_list)),prog=std::get<14>(parameter_list);
     int steps_c(sims),k_max(0),k_max_out(0); // Need to find ouf which dimension i np.size(n,1) refers to
     std::list<double> weights(sims,1.0/double(sims)),wg(sims,1.0/double(sims)),avec_sum(sims,0),t(sims,0);
@@ -595,35 +606,25 @@ int main(int argc, char* argv[]) {
     std::vector<double> death_vec;
 //    std::deque<double> Nlimits={0,mf_solution,N+1.0};
 
-    double n_min = mf_solution,n_min_new;
     std::list<int>::iterator it_min_new;
     int relaxation_time=20;
     // End of variable defnitions
 
     networks_dynamics net_d(num_inf,weights,avec_sum,t,infected_node,infected_neighbors_in,
                             infected_neighbors_out,sigma,s_m,positions,susceptible_nodes,SI);
-    network_topology net_t(Alpha,Beta,k_max,degrees_in,degrees_out,Adjlist_in,Adjlist_out);
+    network_topology net_t(Alpha,Beta,k_max,degrees_in,degrees_out,Adjlist_in,Adjlist_out,beta_cat);
 
 //    # pragma omp parallel for //code for parallelization of jobs on cluster
     for(int j=0;j<it;j++){
         // Run Gillespie's time step and update the number of deaths and net_d
         // death now contains the time of the simulations that died.
-        death = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t);
+        death = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
         death_vec.push_back(death);
 
         std::cout <<j<<std::endl;
     }
     auto start_pos_relax=death_vec.begin();
     std::advance(start_pos_relax,relaxation_time);
-//    double death_sum = std::accumulate(start_pos_relax,death_vec.end(),0.0),weight_sum = std::accumulate(net_d.weights.begin(),net_d.weights.end(),0.0);
-//    double TAU = tau/( death_sum/death_vec.size() );
-//    std::cout << "MTE: " << TAU <<std::endl;
-//    death_sum = std::accumulate(death_vec.begin(),death_vec.end(),0.0);
-//    std::cout<< "Weights "<<weight_sum<< ", Deaths "<<death_sum<<std::endl;
-//    std::cout << "Check if probability is conserved: Weights + Death = " << death_sum+weight_sum<<std::endl;
-//    double theory_well_mixed_mte=(1.0 / Alpha) * sqrt(2.0 * M_PI / N) * (lam / pow((lam - 1), 2)) *
-//                                 exp(N * (log(lam) + 1 / lam - 1));
-//    std::cout << "Well-mixed numeric ratio: " << TAU/theory_well_mixed_mte << std::endl;
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::cout << "Program execution time: " << duration.count() << " seconds" << std::endl;
