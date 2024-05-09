@@ -232,8 +232,8 @@ public:
         }
         *i_t += sim_time;
         if (*i_num_inf<=0){
-            double deleted_weights=*i_weights;
-            return std::make_pair(deleted_weights,erase_simulation(net_d));
+            double extinction_time=sim_time;
+            return std::make_pair(extinction_time,erase_simulation(net_d));
         }
         return std::make_pair(0.0,*this);
     }
@@ -517,90 +517,13 @@ double GillespieMC(double tau,std::mt19937& gen,std::uniform_real_distribution<d
     double death=0.0;;
     while (!network.end(net_d)){
         data_sim_gillespie = network.gillespie(tau,gen,uniform_dist,net_d,net_t);
-        death+= data_sim_gillespie.first;
+        death= data_sim_gillespie.first;
         if (data_sim_gillespie.first>0.0){continue;} // The simulation was erased so network points to the next network
         ++network;
     }
     return death;
 }
 
-
-std::pair<std::vector<std::deque<simulation_data>>,std::vector<double> > create_bins(std::deque<double> &Nlimits,
-                                                                                     networks_dynamics &net_d){
-    // A function that creates the bin vector which store all simulations according to their relative number of infected nodes to Nlimits
-    simulation_data sim_data(net_d);
-    std::deque<double>::iterator it_bin;
-    int pos;
-    std::vector<std::deque<simulation_data>> bins(Nlimits.size());
-    std::vector<double> wtot(Nlimits.size(), 0.0);
-
-    while (sim_data.i_num_inf != net_d.num_inf.end()) {
-        it_bin = std::lower_bound(Nlimits.begin(), Nlimits.end(), *sim_data.i_num_inf);
-        pos = std::distance(Nlimits.begin(), it_bin)-1;
-
-        wtot[pos] += (*sim_data.i_weights);
-        if (bins[pos].empty() == true) {
-            bins[pos].push_back(sim_data);
-        } else {
-            if (*bins[pos].front().i_weights > (*sim_data.i_weights))
-                bins[pos].push_front(sim_data);
-            else if (*bins[pos].back().i_weights < (*sim_data.i_weights))
-                bins[pos].push_back(sim_data);
-            else {
-                for (auto it_we_r = bins[pos].begin(); it_we_r != bins[pos].end(); ++it_we_r) {
-                    auto next_sim = it_we_r;
-                    ++next_sim;
-                    if (next_sim==bins[pos].end()){
-                        bins[pos].push_back(sim_data);
-                        break;
-                    }
-                    if (*it_we_r->i_weights <= (*sim_data.i_weights) &&
-                        *next_sim->i_weights >= (*sim_data.i_weights)) {
-                        bins[pos].insert(it_we_r, sim_data);
-                        break;
-                    }
-                }
-            }
-        }
-        ++sim_data;
-    }
-    return std::make_pair(bins,wtot);
-}
-
-
-void duplicate_bin(double split,std::deque<simulation_data>::iterator &it_sim,networks_dynamics &net_d){
-    // This function duplicate bins in the bin vector, the number of bins duplicated are split
-    net_d.num_inf.insert(it_sim->i_num_inf,std::ceil(split-1), *it_sim->i_num_inf);
-    net_d.weights.insert(it_sim->i_weights, std::ceil(split-1), *it_sim->i_weights / double(std::ceil(split)));
-    *it_sim->i_weights = *it_sim->i_weights / double(std::ceil(split));
-    net_d.avec_sum.insert(it_sim->i_avec_sum, std::ceil(split-1), *it_sim->i_avec_sum);
-    net_d.t.insert(it_sim->i_t,std::ceil(split-1), *it_sim->i_t);
-    net_d.infected_node.insert(it_sim->i_infected_node, std::ceil(split-1), *it_sim->i_infected_node);
-    net_d.infected_neighbors_in.insert(it_sim->i_infected_neighbors_in, std::ceil(split-1), *it_sim->i_infected_neighbors_in);
-    net_d.infected_neighbors_out.insert(it_sim->i_infected_neighbors_out, std::ceil(split-1), *it_sim->i_infected_neighbors_out);
-    net_d.sigma.insert(it_sim->i_sigma, std::ceil(split-1), *it_sim->i_sigma);
-    net_d.s_m.insert(it_sim->i_s_m, std::ceil(split-1), *it_sim->i_s_m);
-    net_d.positions.insert(it_sim->i_positions, std::ceil(split-1), *it_sim->i_positions);
-    net_d.susceptible_nodes.insert(it_sim->i_susceptible_nodes, std::ceil(split-1), *it_sim->i_susceptible_nodes);
-    net_d.SI.insert(it_sim->i_SI, std::ceil(split-1), *it_sim->i_SI);
-}
-
-
-void erase_bin(std::deque<simulation_data>::iterator &it_sim,networks_dynamics &net_d){
-    // This function duplicate bins in the bin vector, the number of bins duplicated are split
-    net_d.num_inf.erase(it_sim->i_num_inf);
-    net_d.weights.erase(it_sim->i_weights);
-    net_d.avec_sum.erase(it_sim->i_avec_sum);
-    net_d.t.erase(it_sim->i_t);
-    net_d.infected_node.erase(it_sim->i_infected_node);
-    net_d.infected_neighbors_in.erase(it_sim->i_infected_neighbors_in);
-    net_d.infected_neighbors_out.erase(it_sim->i_infected_neighbors_out);
-    net_d.sigma.erase(it_sim->i_sigma);
-    net_d.s_m.erase(it_sim->i_s_m);
-    net_d.positions.erase(it_sim->i_positions);
-    net_d.susceptible_nodes.erase(it_sim->i_susceptible_nodes);
-    net_d.SI.erase(it_sim->i_SI);
-}
 
 std::deque<simulation_data>::iterator randomly_select_simulation(std::deque<simulation_data> &consmall
         ,std::deque<simulation_data>::iterator &end_simulation,double wtot,std::mt19937 &gen){
@@ -614,102 +537,11 @@ std::deque<simulation_data>::iterator randomly_select_simulation(std::deque<simu
     return end_simulation;
 }
 
-void unify_simulations(std::deque<simulation_data> &consamll,std::deque<simulation_data>::iterator &end_simulation,
-                       double weight,networks_dynamics &net_d,std::mt19937 &gen){
-    auto it_sim=consamll.begin();
-    auto it_surviving_sim=randomly_select_simulation(consamll,end_simulation,weight,gen);
-    while (it_sim!=end_simulation){
-        if (it_sim==it_surviving_sim){*it_sim->i_weights=weight;}
-        else{erase_bin(it_sim,net_d);}
-        consamll.pop_front();
-        it_sim =consamll.begin();
-    }
-}
-
-void resample(int steps_c,std::deque<double> &Nlimits,networks_dynamics &net_d,std::mt19937 &gen) {
-
-    double wtot_sum,split;
-    // Vector where in each bin there is a simulation data to be either united of split with other simulations in the same bin
-    auto bins_con = create_bins(Nlimits,net_d);
-    auto bins = bins_con.first;
-    auto wtot = bins_con.second;
-
-    std::vector<simulation_data> sim_data;
-    std::vector<std::deque<simulation_data>> consmall(Nlimits.size());
-
-
-    // This for loop is meant to split bins that has too much weight and to record those with lower weight to be unified later
-    for (int i = 0; i < bins.size(); i++) {
-        for (auto it_sim = bins[i].begin(); it_sim != bins[i].end(); ++it_sim) {
-            split = ( *it_sim->i_weights*steps_c/2)/(wtot[i]);
-            if (split > 1)
-                duplicate_bin(split,it_sim,net_d);
-            else if (4*split<1)
-                consmall[i].push_back(*it_sim);
-        }
-    }
-
-    // This for loop is to unify bins that has a low weight
-    std::deque<simulation_data>::iterator it_sim_unified;
-    for (int i=0; i<consmall.size();i++){
-        wtot_sum =0.0;
-        it_sim_unified = consmall[i].begin();
-        while (it_sim_unified!=consmall[i].end()){
-            wtot_sum += *it_sim_unified->i_weights;
-            if (wtot_sum>=wtot[i]/steps_c){
-                unify_simulations(consmall[i],++it_sim_unified,wtot_sum,net_d,gen);
-                wtot_sum = 0.0;
-                continue;
-            }
-            ++it_sim_unified;
-        }
-        if (!consmall[i].empty())
-            unify_simulations(consmall[i],it_sim_unified,wtot_sum,net_d,gen);
-    }
-}
-
-
-int find_new_min(std::list<int>& num_inf,int new_trajectory_bin){
-    int n_min_new = num_inf.size();
-    int count_smaller = 0;
-    std::vector<std::pair<int,int>> infected_types;
-
-//    std::vector<int> number_of_infected_types,number_of_infected_types_values;
-    for(auto outer_it=num_inf.begin();outer_it!=num_inf.end();++outer_it){
-        count_smaller =0;
-        for (auto inner_it = num_inf.begin(); inner_it != num_inf.end(); ++inner_it) {
-            if (*inner_it < *outer_it) {
-                count_smaller++;
-            }
-        }
-        auto predicated = [count_smaller](const std::pair<int,int>& element){
-            return element.first==count_smaller;
-        };
-        auto foundElement = std::find_if(infected_types.begin(),infected_types.end(),predicated);
-        if (foundElement==infected_types.end()){
-            infected_types.push_back(std::pair<int,int>(count_smaller,*outer_it) );
-        }
-
-    }
-    auto compareFunction = [](const std::pair<int,int>& lhs,const std::pair<int,int>& rhs){
-        return lhs.second<rhs.second;
-    };
-    int count=0;
-    std::sort(infected_types.begin(),infected_types.end(),compareFunction);
-    for(int i=0;i<infected_types.size();i++){
-        count = count +infected_types[i].first;
-        if (count>new_trajectory_bin){
-            n_min_new = infected_types[i].second;
-            break;
-        }
-    }
-    return n_min_new;
-}
 
 int main(int argc, char* argv[]) {
-    std::string filename_in("/home/elad/we_sis_networks_extinction_cpp/Adjin_0.txt"),
-            filename_out("/home/elad/we_sis_networks_extinction_cpp/Adjout_0.txt"),
-            parametersname("/home/elad/we_sis_networks_extinction_cpp/cparameters_0.txt");
+    std::string filename_in("/home/elad/multi_contact_rate_project/cpp_time_varying_rates/Adjin_0.txt"),
+            filename_out("/home/elad/multi_contact_rate_project/cpp_time_varying_rates/Adjout_0.txt"),
+            parametersname("/home/elad/multi_contact_rate_project/cpp_time_varying_rates/cparameters_0.txt");
     if (argc>1){
         filename_in=argv[1];
         filename_out=argv[2];
@@ -761,7 +593,7 @@ int main(int argc, char* argv[]) {
     inital_networks_stat(N,inital_inf_percent,sims,num_inf,infected_node,infected_neighbors_in,infected_neighbors_out,sigma,
                          degrees_in,degrees_out,Adjlist_in,Adjlist_out,positions,susceptible_nodes,SI,s_m,k_max,gen,int_dist);
     std::vector<double> death_vec;
-    std::deque<double> Nlimits={0,mf_solution,N+1.0};
+//    std::deque<double> Nlimits={0,mf_solution,N+1.0};
 
     double n_min = mf_solution,n_min_new;
     std::list<int>::iterator it_min_new;
@@ -775,39 +607,31 @@ int main(int argc, char* argv[]) {
 //    # pragma omp parallel for //code for parallelization of jobs on cluster
     for(int j=0;j<it;j++){
         // Run Gillespie's time step and update the number of deaths and net_d
+        // death now contains the time of the simulations that died.
         death = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t);
         death_vec.push_back(death);
 
-        // Add to Nlimits a new bin if there is enough flux going to a lower infected level
-        n_min_new=find_new_min(net_d.num_inf,new_trajectory_bin);
-        if (n_min_new<n_min-jump && Nlimits[1]>jump){
-            n_min=n_min_new;
-            Nlimits.push_front(Nlimits[0]);
-            Nlimits[1]=n_min;
-        }
-        // Resample the paths so highly weighted simulations are split and low weighted simulations are unified
-        resample(steps_c,Nlimits,net_d,gen);
         std::cout <<j<<std::endl;
     }
     auto start_pos_relax=death_vec.begin();
     std::advance(start_pos_relax,relaxation_time);
-    double death_sum = std::accumulate(start_pos_relax,death_vec.end(),0.0),weight_sum = std::accumulate(net_d.weights.begin(),net_d.weights.end(),0.0);
-    double TAU = tau/( death_sum/death_vec.size() );
-    std::cout << "MTE: " << TAU <<std::endl;
-    death_sum = std::accumulate(death_vec.begin(),death_vec.end(),0.0);
-    std::cout<< "Weights "<<weight_sum<< ", Deaths "<<death_sum<<std::endl;
-    std::cout << "Check if probability is conserved: Weights + Death = " << death_sum+weight_sum<<std::endl;
-    double theory_well_mixed_mte=(1.0 / Alpha) * sqrt(2.0 * M_PI / N) * (lam / pow((lam - 1), 2)) *
-                                 exp(N * (log(lam) + 1 / lam - 1));
-    std::cout << "Well-mixed numeric ratio: " << TAU/theory_well_mixed_mte << std::endl;
+//    double death_sum = std::accumulate(start_pos_relax,death_vec.end(),0.0),weight_sum = std::accumulate(net_d.weights.begin(),net_d.weights.end(),0.0);
+//    double TAU = tau/( death_sum/death_vec.size() );
+//    std::cout << "MTE: " << TAU <<std::endl;
+//    death_sum = std::accumulate(death_vec.begin(),death_vec.end(),0.0);
+//    std::cout<< "Weights "<<weight_sum<< ", Deaths "<<death_sum<<std::endl;
+//    std::cout << "Check if probability is conserved: Weights + Death = " << death_sum+weight_sum<<std::endl;
+//    double theory_well_mixed_mte=(1.0 / Alpha) * sqrt(2.0 * M_PI / N) * (lam / pow((lam - 1), 2)) *
+//                                 exp(N * (log(lam) + 1 / lam - 1));
+//    std::cout << "Well-mixed numeric ratio: " << TAU/theory_well_mixed_mte << std::endl;
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::cout << "Program execution time: " << duration.count() << " seconds" << std::endl;
-    std::string deathname="death.csv", parmetername="output_parameters.csv",weights_name="weights.csv",name_Nlimits="Nlimits.csv";
+    std::string deathname="death.csv", parmetername="output_parameters.csv",weights_name="weights.csv";
     write_output_data(deathname,death_vec);
-    write_output_data(name_Nlimits,Nlimits);
+//    write_output_data(name_Nlimits,Nlimits);
     write_output_data_multi_col(weights_name,net_d.num_inf,net_d.weights);
-    std::vector<double> outputparameters={double(duration.count()),double(network_number),TAU};
+    std::vector<double> outputparameters={double(duration.count()),double(network_number)};
     write_output_data(parmetername,outputparameters);
     return 0;
 }
