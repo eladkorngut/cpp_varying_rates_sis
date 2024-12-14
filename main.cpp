@@ -519,15 +519,15 @@ void inital_networks_stat(int N,double x,int sims,std::list<int>& num_inf,std::l
 }
 
 
-double GillespieMC(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
+std::vector<double> GillespieMC(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
                    std::exponential_distribution<double> &exponential_dist,networks_dynamics &net_d,
                    network_topology &net_t,double cat_start,double cat_duration){
     simulation_data network(net_d);
     std::pair<double,simulation_data> data_sim_gillespie(0.0,network);
-    double death=0.0;;
+    std::vector<double> death;
     while (!network.end(net_d)){
         data_sim_gillespie = network.gillespie(tau,gen,uniform_dist,net_d,net_t,cat_start,cat_duration);
-        death= data_sim_gillespie.first;
+        death.push_back(data_sim_gillespie.first);
         if (data_sim_gillespie.first>0.0){continue;} // The simulation was erased so network points to the next network
         ++network;
     }
@@ -613,16 +613,17 @@ int main(int argc, char* argv[]) {
     networks_dynamics net_d(num_inf,weights,avec_sum,t,infected_node,infected_neighbors_in,
                             infected_neighbors_out,sigma,s_m,positions,susceptible_nodes,SI);
     network_topology net_t(Alpha,Beta,k_max,degrees_in,degrees_out,Adjlist_in,Adjlist_out,beta_cat);
+    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
 
 //    # pragma omp parallel for //code for parallelization of jobs on cluster
-    for(int j=0;j<it;j++){
+//    for(int j=0;j<1;j++){
         // Run Gillespie's time step and update the number of deaths and net_d
         // death now contains the time of the simulations that died.
-        death = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
-        death_vec.push_back(death);
+//        death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
+//        death_vec.push_back(death);
 
-        std::cout <<j<<std::endl;
-    }
+//        std::cout <<j<<std::endl;
+//    }
     auto start_pos_relax=death_vec.begin();
     std::advance(start_pos_relax,relaxation_time);
     auto end_time = std::chrono::high_resolution_clock::now();

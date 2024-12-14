@@ -199,7 +199,7 @@ def job_to_cluster(foldername,parameters,Istar,prog):
             Beta_graph = float(lam)/k_avg_graph
             Beta = Beta_graph / (1 + eps_graph ** 2)
             parameters = np.array([N,sims,it,k_avg_graph,x,lam,jump,Alpha,Beta,i,tau,Istar,new_trajcetory_bin,
-                                   dir_path,prog,eps_graph,eps_graph,start,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment,])
+                                   dir_path,prog,eps_graph,eps_graph,start,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
             np.save('parameters_{}.npy'.format(i), parameters)
         else:
             if error_graphs==False:
@@ -213,7 +213,7 @@ def job_to_cluster(foldername,parameters,Istar,prog):
                 Beta_graph = float(lam)/k_avg_graph
                 Beta = Beta_graph / (1 + eps_graph ** 2)
             parameters = np.array([N,sims,it,k_avg_graph,x,lam,jump,Alpha,Beta,i,tau,Istar,new_trajcetory_bin,dir_path,
-                                   prog,eps_graph,eps_graph,graph_std,graph_skewness,third_moment,second_moment,start,duartion,strength*Beta])
+                                   prog,eps_graph,eps_graph,start,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
             np.save('parameters_{}.npy'.format(i), parameters)
         infile = 'GNull_{}.pickle'.format(i)
         with open(infile,'wb') as f:
@@ -232,15 +232,15 @@ def job_to_cluster(foldername,parameters,Istar,prog):
 
 if __name__ == '__main__':
     # Parameters for the network to work
-    N = 800 # number of nodes
-    lam = 1.2 # The reproduction number
+    N = 100 # number of nodes
+    lam = 1.6 # The reproduction number
     number_of_networks = 1
-    sims = 1 # Number of simulations at each step
+    sims = 100 # Number of simulations at each step
     # k = N # Average number of neighbors for each node
-    k = 400 # Average number of neighbors for each node
+    k = 50 # Average number of neighbors for each node
     x = 0.2 # intial infection percentage
     Num_inf = int(x*N) # Number of initially infected nodes
-    it = 70
+    it = sims
     jump = 1
     Alpha = 1.0 # Recovery rate
     Beta_avg = Alpha * lam / k # Infection rate for each node
@@ -249,7 +249,7 @@ if __name__ == '__main__':
     # G = nx.random_regular_graph(k,N) # Creates a random graphs with k number of neighbors
     relaxation_time  = 20
     # tau = 1/(Num_inf*Alpha+N*Beta*k)
-    tau = 100.0
+    tau = 400.0
     new_trajcetory_bin = 2
     prog = 'bd'
     error_graphs = False
@@ -274,3 +274,4 @@ if __name__ == '__main__':
     # What's the job to run either on the cluster or on the laptop
     job_to_cluster(foldername,parameters,Istar,prog)
     # act_as_main(foldername,parameters,Istar,prog)
+
