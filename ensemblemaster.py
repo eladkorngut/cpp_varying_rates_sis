@@ -25,7 +25,7 @@ if __name__ == '__main__':
     k= 80
 
     # Catstrophe parameters parameters
-    relaxation_time = 20.0
+    relaxation_time = 20
     sims = int(measurements/number_of_networks)
     tau = 150
     # tau = np.linspace(0.1,2.0,20)

@@ -910,7 +910,8 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type):
                 d1_in, d1_out, d2_in, d2_out = int(int(kavg) * (1 - float(epsilon))), int(
                     int(kavg) * (1 - float(epsilon))), int(int(kavg) * (1 + float(epsilon))), int(
                     int(kavg) * (1 + float(epsilon)))
-                G = random_bimodal_directed_graph(int(d1_in), int(d1_out), int(d2_in), int(d2_out), int(N))
+                G = random_bimodal_graph(d1_in, d2_in, N, seed=None)
+                # G = random_bimodal_directed_graph(int(d1_in), int(d1_out), int(d2_in), int(d2_out), int(N))
                 return G
             if np.sum(d)%2!=0:
                 d[int(len(d)*np.random.random())]+=1
