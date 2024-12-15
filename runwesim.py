@@ -242,8 +242,8 @@ if __name__ == '__main__':
     parser.add_argument('--sims', type=int, help='Number of simulations at each bin')
     parser.add_argument('--tau', type=float, help='Tau parameter')
     parser.add_argument('--start', type=int, help='The time for which the catastrophe starts')
-    parser.add_argument('--duartion', type=int, help='The duration, how long does the catstrophe lasts')
-    parser.add_argument('--strength', type=int, help='By how much the decline in Beta, how strong is the catastrophe')
+    parser.add_argument('--duartion', type=float, help='The duration, how long does the catstrophe lasts')
+    parser.add_argument('--strength', type=float, help='By how much the decline in Beta, how strong is the catastrophe')
 
     # Parameters that don't get changed
     parser.add_argument('--relaxation_time', type=int, help='Relaxation time')

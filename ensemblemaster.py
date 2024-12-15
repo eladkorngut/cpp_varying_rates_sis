@@ -13,26 +13,26 @@ if __name__ == '__main__':
     lam = 1.18
     # lam = 1+np.logspace(-2,0,9)
     # lam = np.array([1.5,1.6,1.7,1.8])
-    measurements = 50000
+    measurements = 100000
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
-    eps_din = [0.02,0.05,0.1,0.15,0.2]
+    eps_din = [0.0, 0.05, 0.1, 0.15, 0.2]
     eps_dout = eps_din
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
     correlation = 0.0
     number_of_networks = 100
     # k = [50]
 
-    k= 50
+    k= 80
 
     # Catstrophe parameters parameters
     relaxation_time = 20.0
     sims = int(measurements/number_of_networks)
-    tau = 80
+    tau = 150
     # tau = np.linspace(0.1,2.0,20)
     start = 50
     phi = 1.0
-    duartion = 1
-    strength = 1-phi
+    duartion = 1.0
+    strength = 1.0-phi
     error_graphs = False
 
     # Parameters that don't change
