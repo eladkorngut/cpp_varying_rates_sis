@@ -78,6 +78,11 @@ def job_to_cluster(foldername,parameters,Istar,prog):
     eps_graph = graph_std / k_avg_graph
     Beta_graph = float(lam)/k_avg_graph
     Beta = Beta_graph / (1 + eps_graph ** 2)
+    parameters = np.array(
+        [N, sims, start, k_avg_graph, x, lam, duartion, Alpha, Beta, i, tau, Istar, strength, dir_path,
+         prog, eps_graph, start, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment])
+    np.save('parameters_all.npy', parameters)
+
     for i in range(int(number_of_networks)):
         if error_graphs==False:
             G = rand_networks.configuration_model_undirected_graph_mulit_type(float(k),float(eps_din),int(N),prog)
@@ -89,7 +94,7 @@ def job_to_cluster(foldername,parameters,Istar,prog):
             Beta_graph = float(lam)/k_avg_graph
             Beta = Beta_graph / (1 + eps_graph ** 2)
         parameters = np.array([N,sims,start,k_avg_graph,x,lam,duartion,Alpha,Beta,i,tau,Istar,strength,dir_path,
-                               prog,eps_graph,eps_graph,start,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
+                               prog,eps_graph,start,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
         np.save('parameters_{}.npy'.format(i), parameters)
         infile = 'GNull_{}.pickle'.format(i)
         with open(infile,'wb') as f:
