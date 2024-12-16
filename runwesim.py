@@ -79,7 +79,7 @@ def job_to_cluster(foldername,parameters,Istar,prog):
     Beta_graph = float(lam)/k_avg_graph
     Beta = Beta_graph / (1 + eps_graph ** 2)
     parameters = np.array(
-        [N, sims, start, k_avg_graph, x, lam, duartion, Alpha, Beta, i, tau, Istar, strength, dir_path,
+        [N, sims, start, k_avg_graph, x, lam, duartion, Alpha, Beta, tau, Istar, strength, dir_path,
          prog, eps_graph, start, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment])
     np.save('parameters_all.npy', parameters)
 
