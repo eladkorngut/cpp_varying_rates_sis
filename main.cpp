@@ -31,6 +31,27 @@ void read_in_neighborslist(int N,std::string& filename,std::vector<std::vector<i
 void read_parameters(std::string& filename,std::fstream& parameters_file,int N,int sims,int it,int k,double x,double lam,double Alpha,double Beta,int network_number,
                      double mf_solution,int new_trajectory_bin,int k_max);
 
+double gillespie1d(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
+                   double cat_start,double cat_duration,int N, int seed,double Alpha, double beta, double beta_cat,int k){
+    double time = 0.0,rates,r1,r2;
+    int Num_inf = seed;
+    while (Num_inf>0 && time<tau){
+        r1 = uniform_dist(gen);
+        r2 = -std::log(uniform_dist(gen));
+        if (time > cat_start and time <= cat_start + cat_duration)
+            rates = Num_inf * Alpha + (beta_cat * k * (N - Num_inf) * Num_inf)/N;
+        else
+            rates = Num_inf * Alpha + (beta * k * (N - Num_inf) * Num_inf)/N;
+        if (Alpha*Num_inf/rates<r1)
+            Num_inf++;
+        else
+            Num_inf--;
+        time+= r2 / rates;
+    }
+    if (Num_inf>0)
+        return 0.0;
+    return time;
+}
 
 
 struct network_topology{
@@ -174,7 +195,8 @@ public:
         return *this;
     }
 
-    std::pair<double,simulation_data > gillespie(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
+
+        std::pair<double,simulation_data > gillespie(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
                                                  networks_dynamics &net_d,network_topology &net_t,double cat_start,double cat_duration){
         double sim_time=0,r1,r2,s_m_sum=0;
         int m_in,m_out,node;
@@ -264,14 +286,13 @@ std::string read_single_string_parameter(std::stringstream& ss,std::string& word
     return word;
 }
 
-std::tuple<int,int,int,int,double,double,double,double,double,int,double,double,int,std::string & ,std::string &,double,double,double,double,double >
-read_parameters(std::string& filename,std::fstream& parameters_file) {
+std::tuple<int,int,double,int,double,double,double,double,int,double,double,double,std::string & ,std::string &,double,double,double,double > read_parameters(std::string& filename,std::fstream& parameters_file) {
     // Read network parameters from python files
     std::string line;
     std::stringstream ss;
     std::string word;
-    int N,sims,it,k,jump,network_number,new_trajectory_bin;
-    double x,lam,Alpha,Beta,tau,mf_solution,start_cat_time,duration,beta_cat,eps_din,eps_dout;
+    int N,sims,k,jump,network_number;
+    double x,lam,Alpha,Beta,tau,mf_solution,duration,beta_cat,eps_din,eps_dout,strength,start;
     std::string prog,dir_path;
     parameters_file.open(filename);
     while (getline(parameters_file, line)) {
@@ -279,27 +300,26 @@ read_parameters(std::string& filename,std::fstream& parameters_file) {
         ss.str(line);
         N = read_single_int_parameter(ss,word);
         sims = read_single_int_parameter(ss,word);
-        it = read_single_int_parameter(ss,word);
+        start = read_single_int_parameter(ss,word);
         k = read_single_int_parameter(ss,word) ;
         x = read_single_double_parameter(ss,word);
         lam = read_single_double_parameter(ss,word);
-        jump = read_single_int_parameter(ss,word);
+//        jump = read_single_int_parameter(ss,word);
         Alpha = read_single_double_parameter(ss,word);
         Beta = read_single_double_parameter(ss,word);
         network_number = read_single_int_parameter(ss,word);
         tau = read_single_double_parameter(ss,word);
         mf_solution = read_single_double_parameter(ss,word);
-        new_trajectory_bin = read_single_int_parameter(ss,word);
+        strength = read_single_int_parameter(ss,word);
         prog=read_single_string_parameter(ss,word);
         dir_path=read_single_string_parameter(ss,word);
         eps_din = read_single_double_parameter(ss,word);
         eps_dout = read_single_double_parameter(ss,word);
-        start_cat_time = read_single_double_parameter(ss,word);
         duration = read_single_double_parameter(ss,word);
         beta_cat = read_single_double_parameter(ss,word);
     }
-    return std::tuple<int,int,int,int,double,double,int,double,double,int,double,double,int,std::string & ,std::string&,double,double,double,double,double>
-            (N,sims,it,k,x,lam,jump,Alpha,Beta,network_number,tau,mf_solution,new_trajectory_bin,prog,dir_path,eps_din,eps_dout,start_cat_time,duration,beta_cat);
+    return std::tuple<int,int,double,int,double,double,double,double,int,double,double,double,std::string & ,std::string&,double,double,double,double>
+                    (N,sims,start,k,x,lam,Alpha,Beta,network_number,tau,mf_solution,strength,prog,dir_path,eps_din,eps_dout,duration,beta_cat);
 }
 
 void remove_infected_node(int node,std::vector<int> &infected_node,std::vector<int> &positions){
@@ -535,6 +555,17 @@ std::vector<double> GillespieMC(double tau,std::mt19937& gen,std::uniform_real_d
 }
 
 
+std::vector<double> GillespieMC1d(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
+                                std::exponential_distribution<double> &exponential_dist,int N,
+                                int seed,double cat_start,double cat_duration,int sim_max,double Alpha,double beta, double beta_cat,int k){
+    std::vector<double> death;
+    for (int sim=0; sim<sim_max;sim++)
+        death.push_back(gillespie1d(tau,gen,uniform_dist,cat_start,cat_duration,N, seed,Alpha, beta, beta_cat,k));
+    return death;
+}
+
+
+
 std::deque<simulation_data>::iterator randomly_select_simulation(std::deque<simulation_data> &consmall
         ,std::deque<simulation_data>::iterator &end_simulation,double wtot,std::mt19937 &gen){
     std::uniform_real_distribution<> sim_dist(0.0,wtot);
@@ -560,12 +591,12 @@ int main(int argc, char* argv[]) {
     double death(0.0);
     std::fstream Adjfile_in,Adjfile_out,parametersfile;
     auto parameter_list=read_parameters(parametersname,parametersfile);
-    int N=std::get<0>(parameter_list),sims=std::get<1>(parameter_list),it=std::get<2>(parameter_list),
-            k=std::get<3>(parameter_list),jump=std::get<6>(parameter_list),network_number=std::get<9>(parameter_list),new_trajectory_bin=std::get<12>(parameter_list);
-    double inital_inf_percent=std::get<4>(parameter_list),lam=std::get<5>(parameter_list),Alpha=std::get<7>(parameter_list)
-    ,Beta=std::get<8>(parameter_list),tau=std::get<10>(parameter_list),mf_solution=std::get<11>(parameter_list),
-            cat_start=std::get<17>(parameter_list),cat_duration=std::get<18>(parameter_list),beta_cat=std::get<19>(parameter_list);
-    std::string dir_path(std::get<13>(parameter_list)),prog=std::get<14>(parameter_list);
+    int N=std::get<0>(parameter_list),sims=std::get<1>(parameter_list),start=std::get<2>(parameter_list),
+            k=std::get<3>(parameter_list),network_number=std::get<8>(parameter_list);
+    double inital_inf_percent=std::get<4>(parameter_list),lam=std::get<5>(parameter_list),Alpha=std::get<6>(parameter_list)
+    ,Beta=std::get<7>(parameter_list),tau=std::get<9>(parameter_list),mf_solution=std::get<10>(parameter_list),
+            cat_duration=std::get<16>(parameter_list),beta_cat=std::get<17>(parameter_list);
+    std::string dir_path(std::get<13>(parameter_list)),prog=std::get<12>(parameter_list);
     int steps_c(sims),k_max(0),k_max_out(0); // Need to find ouf which dimension i np.size(n,1) refers to
     std::list<double> weights(sims,1.0/double(sims)),wg(sims,1.0/double(sims)),avec_sum(sims,0),t(sims,0);
     std::list<double>::iterator it_weights(weights.begin()),it_wg(wg.begin()),it_avec_sum(avec_sum.begin());
@@ -613,7 +644,9 @@ int main(int argc, char* argv[]) {
     networks_dynamics net_d(num_inf,weights,avec_sum,t,infected_node,infected_neighbors_in,
                             infected_neighbors_out,sigma,s_m,positions,susceptible_nodes,SI);
     network_topology net_t(Alpha,Beta,k_max,degrees_in,degrees_out,Adjlist_in,Adjlist_out,beta_cat);
-    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
+//    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
+    death_vec = GillespieMC1d(tau,gen,uniform_dist,exponential_dist,N,int(inital_inf_percent*N),start,cat_duration,sims,Alpha,Beta,beta_cat,k);
+
 
 //    # pragma omp parallel for //code for parallelization of jobs on cluster
 //    for(int j=0;j<1;j++){
@@ -624,6 +657,7 @@ int main(int argc, char* argv[]) {
 
 //        std::cout <<j<<std::endl;
 //    }
+
     auto start_pos_relax=death_vec.begin();
     std::advance(start_pos_relax,relaxation_time);
     auto end_time = std::chrono::high_resolution_clock::now();

@@ -892,7 +892,7 @@ def find_multi_k_binary_search(kavg,epsilon,n,net_type):
 
 def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type):
     k_avg_graph = 0
-    if N>1000:
+    if N>50:
         while np.abs(kavg-k_avg_graph)/kavg>0.05:
             if net_type=='ig':
                 wald_mu, wald_lambda = kavg, kavg / epsilon ** 2
@@ -913,6 +913,8 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type):
                 G = random_bimodal_graph(d1_in, d2_in, N, seed=None)
                 # G = random_bimodal_directed_graph(int(d1_in), int(d1_out), int(d2_in), int(d2_out), int(N))
                 return G
+            elif net_type=='complete':
+                return nx.complete_graph(N)
             if np.sum(d)%2!=0:
                 d[int(len(d)*np.random.random())]+=1
             G = nx.configuration_model(d)

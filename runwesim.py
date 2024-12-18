@@ -79,8 +79,8 @@ def job_to_cluster(foldername,parameters,Istar,prog):
     Beta_graph = float(lam)/k_avg_graph
     Beta = Beta_graph / (1 + eps_graph ** 2)
     parameters = np.array(
-        [N, sims, start, k_avg_graph, x, lam, duartion, Alpha, Beta, tau, Istar, strength, dir_path,
-         prog, eps_graph, start, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment])
+        [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
+         dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment])
     np.save('parameters_all.npy', parameters)
 
     for i in range(int(number_of_networks)):
@@ -93,8 +93,8 @@ def job_to_cluster(foldername,parameters,Istar,prog):
             # third_moment = graph_skewness * (graph_std ** 3)
             Beta_graph = float(lam)/k_avg_graph
             Beta = Beta_graph / (1 + eps_graph ** 2)
-        parameters = np.array([N,sims,start,k_avg_graph,x,lam,duartion,Alpha,Beta,i,tau,Istar,strength,dir_path,
-                               prog,eps_graph,start,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
+        parameters = np.array([N,sims,start,k_avg_graph,x,lam,Alpha,Beta,i,tau,Istar,strength,prog,dir_path,eps_graph,
+                               eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
         np.save('parameters_{}.npy'.format(i), parameters)
         infile = 'GNull_{}.pickle'.format(i)
         with open(infile,'wb') as f:
@@ -260,21 +260,21 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Default parameters
-    N = 1200 if args.N is None else args.N
-    prog = 'bd' if args.prog is None else args.prog
-    lam = 1.18 if args.lam is None else args.lam
-    eps_din = 0.1 if args.eps_din is None else args.eps_din
-    eps_dout = 0.1 if args.eps_dout is None else args.eps_dout
+    N = 800 if args.N is None else args.N
+    prog = 'complete' if args.prog is None else args.prog
+    lam = 1.2 if args.lam is None else args.lam
+    eps_din = 0.0 if args.eps_din is None else args.eps_din
+    eps_dout = 0.0 if args.eps_dout is None else args.eps_dout
     # correlation = 0.3 if args.correlation is None else args.correlation
-    number_of_networks = 2 if args.number_of_networks is None else args.number_of_networks
-    k = 80 if args.k is None else args.k
+    number_of_networks = 1 if args.number_of_networks is None else args.number_of_networks
+    k = 799 if args.k is None else args.k
     error_graphs = args.error_graphs
 
-    sims = 100 if args.sims is None else args.sims
-    tau = 80 if args.tau is None else args.tau
-    start = 50 if args.start is None else args.start
-    duartion = 1.0 if args.duartion is None else args.duartion
-    strength = 0.0 if args.strength is None else args.strength
+    sims = 1000 if args.sims is None else args.sims
+    tau = 150 if args.tau is None else args.tau
+    start = 80 if args.start is None else args.start
+    duartion = 20.0 if args.duartion is None else args.duartion
+    strength = 0.95 if args.strength is None else args.strength
 
     relaxation_time = 20 if args.relaxation_time is None else args.relaxation_time
     x = 0.2 if args.x is None else args.x
