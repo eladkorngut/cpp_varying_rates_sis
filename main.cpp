@@ -39,9 +39,9 @@ double gillespie1d(double tau,std::mt19937 &gen,std::uniform_real_distribution<d
         r1 = uniform_dist(gen);
         r2 = -std::log(uniform_dist(gen));
         if (time > cat_start and time <= cat_start + cat_duration)
-            rates = Num_inf * Alpha + (beta_cat * k * (N - Num_inf) * Num_inf);
+            rates = Num_inf * Alpha + (beta_cat * k * (N - Num_inf) * Num_inf)/N;
         else
-            rates = Num_inf * Alpha + (beta * k * (N - Num_inf) * Num_inf);
+            rates = Num_inf * Alpha + (beta * k * (N - Num_inf) * Num_inf)/N;
         if (Alpha*Num_inf/rates<r1)
             Num_inf++;
         else
