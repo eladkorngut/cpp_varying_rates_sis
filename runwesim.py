@@ -93,19 +93,23 @@ def job_to_cluster(foldername,parameters,Istar,prog):
             # third_moment = graph_skewness * (graph_std ** 3)
             Beta_graph = float(lam)/k_avg_graph
             Beta = Beta_graph / (1 + eps_graph ** 2)
+            infile = 'GNull_{}.pickle'.format(i)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
+            nx.write_gpickle(G, infile)
         parameters = np.array([N,sims,start,k_avg_graph,x,lam,Alpha,Beta,i,tau,Istar,strength,prog,dir_path,eps_graph,
                                eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
         np.save('parameters_{}.npy'.format(i), parameters)
-        infile = 'GNull_{}.pickle'.format(i)
-        with open(infile,'wb') as f:
-            pickle.dump(G,f,pickle.HIGHEST_PROTOCOL)
+        # infile = 'GNull_{}.pickle'.format(i)
+        # with open(infile,'wb') as f:
+        #     pickle.dump(G,f,pickle.HIGHEST_PROTOCOL)
         # nx.write_gpickle(G, infile)
         export_network_to_csv(G, i)
         export_parameters_to_csv(parameters,i)
         path_adj_in = data_path + 'Adjin_{}.txt'.format(i)
         path_adj_out = data_path + 'Adjout_{}.txt'.format(i)
         path_parameters = data_path + 'cparameters_{}.txt'.format(i)
-        parameters_path ='{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
+        parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
         os.system('{} {} {}'.format(slurm_path,program_path,parameters_path))
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 

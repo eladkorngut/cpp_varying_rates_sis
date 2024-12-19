@@ -13,14 +13,14 @@ if __name__ == '__main__':
     lam = 1.2
     # lam = 1+np.logspace(-2,0,9)
     # lam = np.array([1.5,1.6,1.7,1.8])
-    measurements = 10000
+    measurements = 100000
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
     # eps_din = [0.0, 0.05, 0.1, 0.15, 0.2]
     eps_din = 0.0
     eps_dout = eps_din
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
     correlation = 0.0
-    number_of_networks = 100
+    number_of_networks = 10
     # k = [50]
 
     k= 799
