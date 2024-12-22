@@ -31,7 +31,7 @@ void read_in_neighborslist(int N,std::string& filename,std::vector<std::vector<i
 void read_parameters(std::string& filename,std::fstream& parameters_file,int N,int sims,int it,int k,double x,double lam,double Alpha,double Beta,int network_number,
                      double mf_solution,int new_trajectory_bin,int k_max);
 
-double gillespie1d(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
+std::pair<double,int> gillespie1d(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
                    double cat_start,double cat_duration,int N, int seed,double Alpha, double beta, double beta_cat,int k){
     double time = 0.0,rates,r1,r2;
     int Num_inf = seed;
@@ -39,21 +39,19 @@ double gillespie1d(double tau,std::mt19937 &gen,std::uniform_real_distribution<d
         r1 = uniform_dist(gen);
         r2 = -std::log(uniform_dist(gen));
         if (time > cat_start and time <= cat_start + cat_duration)
-//            rates = Num_inf * Alpha + (beta_cat * k * (N - Num_inf) * Num_inf)/N;
-            rates = Num_inf * Alpha + (beta_cat * (N - Num_inf) * Num_inf);
+            rates = Num_inf * Alpha + (beta_cat * k * (N - Num_inf) * Num_inf)/N;
         else
-//            rates = Num_inf * Alpha + (beta * k * (N - Num_inf) * Num_inf)/N;
-            rates = Num_inf * Alpha + (beta * (N - Num_inf) * Num_inf);
-
+            rates = Num_inf * Alpha + (beta * k * (N - Num_inf) * Num_inf)/N;
         if (Alpha*Num_inf/rates<r1)
             Num_inf++;
         else
             Num_inf--;
         time+= r2 / rates;
     }
-    if (Num_inf>0)
-        return 0.0;
-    return time;
+//    if (Num_inf>0.0)
+//        return 0.0;
+    std::pair<double,int> network_data(time,Num_inf);
+    return network_data;
 }
 
 
@@ -558,13 +556,22 @@ std::vector<double> GillespieMC(double tau,std::mt19937& gen,std::uniform_real_d
 }
 
 
-std::vector<double> GillespieMC1d(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
+std::pair<std::vector<double>,std::vector<double>> GillespieMC1d(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
                                 std::exponential_distribution<double> &exponential_dist,int N,
                                 int seed,double cat_start,double cat_duration,int sim_max,double Alpha,double beta, double beta_cat,int k){
-    std::vector<double> death;
-    for (int sim=0; sim<sim_max;sim++)
-        death.push_back(gillespie1d(tau,gen,uniform_dist,cat_start,cat_duration,N, seed,Alpha, beta, beta_cat,k));
-    return death;
+    std::vector<double> persistence,extinction;
+    std::pair<double,int> network_extinction;
+    for (int sim=0; sim<sim_max;sim++) {
+        network_extinction = gillespie1d(tau, gen, uniform_dist, cat_start, cat_duration, N, seed, Alpha, beta,
+                                         beta_cat, k);
+        if (network_extinction.second > 0)
+            persistence.push_back(network_extinction.first);
+        else
+            extinction.push_back(network_extinction.first);
+//        death.push_back(gillespie1d(tau,gen,uniform_dist,cat_start,cat_duration,N, seed,Alpha, beta, beta_cat,k));
+    }
+    std::pair<std::vector<double>,std::vector<double>> output(persistence,extinction);
+    return output;
 }
 
 
@@ -647,8 +654,9 @@ int main(int argc, char* argv[]) {
     networks_dynamics net_d(num_inf,weights,avec_sum,t,infected_node,infected_neighbors_in,
                             infected_neighbors_out,sigma,s_m,positions,susceptible_nodes,SI);
     network_topology net_t(Alpha,Beta,k_max,degrees_in,degrees_out,Adjlist_in,Adjlist_out,beta_cat);
+
 //    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
-    death_vec = GillespieMC1d(tau,gen,uniform_dist,exponential_dist,N,int(inital_inf_percent*N),start,cat_duration,sims,Alpha,Beta,beta_cat,k);
+    std::pair<std::vector<double>,std::vector<double>>  persistence_extinction = GillespieMC1d(tau,gen,uniform_dist,exponential_dist,N,int(inital_inf_percent*N),start,cat_duration,sims,Alpha,Beta,beta_cat,k);
 
 
 //    # pragma omp parallel for //code for parallelization of jobs on cluster
@@ -666,10 +674,11 @@ int main(int argc, char* argv[]) {
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::cout << "Program execution time: " << duration.count() << " seconds" << std::endl;
-    std::string deathname="death.csv", parmetername="output_parameters.csv",weights_name="weights.csv";
-    write_output_data(deathname,death_vec);
+    std::string extinction_name="death.csv", parmetername="output_parameters.csv",persistence_name="persistence.csv";
+    write_output_data(persistence_name,persistence_extinction.first);
+    write_output_data(extinction_name,persistence_extinction.second);
 //    write_output_data(name_Nlimits,Nlimits);
-    write_output_data_multi_col(weights_name,net_d.num_inf,net_d.weights);
+//    write_output_data_multi_col(weights_name,net_d.num_inf,net_d.weights);
     std::vector<double> outputparameters={double(duration.count()),double(network_number)};
     write_output_data(parmetername,outputparameters);
     return 0;
