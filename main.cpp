@@ -196,11 +196,10 @@ public:
         return *this;
     }
 
-
-        std::pair<double,simulation_data > gillespie(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
+    std::tuple<double,int,simulation_data> gillespie(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
                                                  networks_dynamics &net_d,network_topology &net_t,double cat_start,double cat_duration){
         double sim_time=0,r1,r2,s_m_sum=0;
-        int m_in,m_out,node;
+        int m_in,m_out,node,i_num_inf_previous;
         while(*i_num_inf>0 && sim_time<tau){
             r1 = uniform_dist(gen);
             r2 = -std::log(uniform_dist(gen));
@@ -259,12 +258,81 @@ public:
         }
         *i_t += sim_time;
         if (*i_num_inf<=0){
-            double extinction_time=sim_time;
-            return std::make_pair(extinction_time,erase_simulation(net_d));
+            i_num_inf_previous = *i_num_inf;
+            return std::make_tuple(sim_time,i_num_inf_previous,erase_simulation(net_d));
         }
-        return std::make_pair(0.0,*this);
+        return std::make_tuple(sim_time,*i_num_inf,*this);
     }
 };
+
+//        std::pair<double,simulation_data > gillespie(double tau,std::mt19937 &gen,std::uniform_real_distribution<double>& uniform_dist,
+//                                                 networks_dynamics &net_d,network_topology &net_t,double cat_start,double cat_duration){
+//        double sim_time=0,r1,r2,s_m_sum=0;
+//        int m_in,m_out,node;
+//        while(*i_num_inf>0 && sim_time<tau){
+//            r1 = uniform_dist(gen);
+//            r2 = -std::log(uniform_dist(gen));
+//            if (sim_time>cat_start && sim_time<=cat_start+cat_duration)
+//                *i_avec_sum = (*i_num_inf)*net_t.Alpha+(*i_SI)*net_t.beta_cat;
+//            else
+//                *i_avec_sum = (*i_num_inf)*net_t.Alpha+(*i_SI)*net_t.Beta;
+////            *i_avec_sum = (*i_num_inf)*net_t.Alpha+(*i_SI)*net_t.Beta;
+//            sim_time+=r2/(*i_avec_sum);
+//            //Pick a node, change its state and update the transition rates
+//            if (r1<(*i_num_inf)*net_t.Alpha/(*i_avec_sum)) {
+//                // Recover an infected node
+//                std::uniform_int_distribution<int> node_dist(0,*i_num_inf-1);
+//                node = (*i_infected_node)[node_dist(gen)]; //randomly choose infected node
+//                m_in = (*i_infected_neighbors_in)[node]; //number of infected neighbors that infecting the node
+//                m_out = (*i_infected_neighbors_out)[node]; //number of infected neighbors that the node infect
+//                (*i_sigma)[node]=0;
+//                (*i_num_inf)--;
+//                //Remove node from infected list and add to susceptible list
+//                remove_infected_node(node,*i_infected_node,*i_positions);
+//                (*i_SI) = (*i_SI) + m_in + m_out - net_t.degree_out[node];
+//                add_susceptible_node(node,m_in,*i_susceptible_nodes,*i_positions);
+//                // Increment number of susceptible nodes with m infected nodes
+//                (*i_s_m)[m_in]++;
+//                decrement_susc_neighbs(net_t.degree_in[node],net_t.degree_out[node],net_t.Adjlist_in[node],net_t.Adjlist_out[node],*i_susceptible_nodes,
+//                                       *i_infected_neighbors_in,*i_infected_neighbors_out,*i_s_m,*i_positions,*i_sigma,*i_infected_node);
+//            }
+//            else{
+//                //Infect a susceptible node
+//                // Pick an m class with probability proportional to the total number of SI links in that m class i.e. s_m[m]*m
+//                r1= uniform_dist(gen)*(*i_SI);
+//                s_m_sum = 0;
+//                for (int m1=1;m1<=net_t.k_max;m1++){
+//                    s_m_sum = s_m_sum + (*i_s_m)[m1]*m1;
+//                    if (r1<=s_m_sum){
+//                        // choose a node with m infected neighbours at random
+//                        std::uniform_int_distribution<int> node_dist(0,(*i_s_m)[m1]-1);
+//                        node = (*i_susceptible_nodes)[m1][node_dist(gen)];
+//                        break;
+//                    }
+//                }
+//                m_in = (*i_infected_neighbors_in)[node];
+//                m_out = (*i_infected_neighbors_out)[node];
+//                (*i_sigma)[node] = 1;
+//                *i_num_inf = (*i_num_inf)+1;
+//                // Remove the node from susceptible list and add to infected list
+//                remove_susceptible_node(node,m_in,*i_susceptible_nodes,*i_positions);
+//                add_infected_node(node,*i_infected_node,*i_positions);
+//                //Decrement number of susceptible nodes
+//                (*i_s_m)[m_in]--;
+//                // change the neighbours to other lists and adjust s_m
+//                (*i_SI) = (*i_SI) + net_t.degree_out[node] - m_in - m_out;
+//                increment_susc_neighbs(net_t.degree_in[node],net_t.degree_out[node],net_t.Adjlist_in[node],net_t.Adjlist_out[node],
+//                                       *i_susceptible_nodes,*i_infected_neighbors_in,*i_infected_neighbors_out,*i_s_m,*i_positions,*i_sigma);
+//            }
+//        }
+//        *i_t += sim_time;
+//        if (*i_num_inf<=0){
+//            double extinction_time=sim_time;
+//            return std::make_pair(extinction_time,erase_simulation(net_d));
+//        }
+//        return std::make_pair(0.0,*this);
+//    }
+//};
 
 // Start of auxiliary functions
 
@@ -540,19 +608,45 @@ void inital_networks_stat(int N,double x,int sims,std::list<int>& num_inf,std::l
 }
 
 
-std::vector<double> GillespieMC(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
+//std::vector<double> GillespieMC(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
+//                   std::exponential_distribution<double> &exponential_dist,networks_dynamics &net_d,
+//                   network_topology &net_t,double cat_start,double cat_duration){
+//    simulation_data network(net_d);
+//    std::pair<double,simulation_data> data_sim_gillespie(0.0,network);
+//    std::vector<double> death;
+//    while (!network.end(net_d)){
+//        data_sim_gillespie = network.gillespie(tau,gen,uniform_dist,net_d,net_t,cat_start,cat_duration);
+//        death.push_back(data_sim_gillespie.first);
+//        if (data_sim_gillespie.first>0.0){continue;} // The simulation was erased so network points to the next network
+//        ++network;
+//    }
+//    return death;
+//}
+
+
+std::pair<std::vector<double>,std::vector<double>> GillespieMC(double tau,std::mt19937& gen,std::uniform_real_distribution<double>& uniform_dist,
                    std::exponential_distribution<double> &exponential_dist,networks_dynamics &net_d,
                    network_topology &net_t,double cat_start,double cat_duration){
     simulation_data network(net_d);
-    std::pair<double,simulation_data> data_sim_gillespie(0.0,network);
-    std::vector<double> death;
+    std::tuple<double, int, simulation_data> data_sim_gillespie(0.0,0,network);
+    std::pair<double,int> sim_output;
+    std::vector<double> extinction_time_num_inf,persistence_time_num_inf;
+    int infected = 0;
+    float time =0;
     while (!network.end(net_d)){
         data_sim_gillespie = network.gillespie(tau,gen,uniform_dist,net_d,net_t,cat_start,cat_duration);
-        death.push_back(data_sim_gillespie.first);
-        if (data_sim_gillespie.first>0.0){continue;} // The simulation was erased so network points to the next network
+        infected = std::get<1>(data_sim_gillespie);
+        time = std::get<0>(data_sim_gillespie);
+        if (infected>0){
+            persistence_time_num_inf.push_back(time);
+        }
+        else{
+            extinction_time_num_inf.push_back(time);
+        }
+        if (infected<=0){continue;} // The simulation was erased so network points to the next network
         ++network;
     }
-    return death;
+    return std::make_pair(persistence_time_num_inf,extinction_time_num_inf);
 }
 
 
@@ -644,7 +738,8 @@ int main(int argc, char* argv[]) {
     std::list<std::vector<int>>::iterator it_s_m(s_m.begin());
     inital_networks_stat(N,inital_inf_percent,sims,num_inf,infected_node,infected_neighbors_in,infected_neighbors_out,sigma,
                          degrees_in,degrees_out,Adjlist_in,Adjlist_out,positions,susceptible_nodes,SI,s_m,k_max,gen,int_dist);
-    std::vector<double> death_vec;
+//    std::vector<double> death_vec;
+    std::pair<std::vector<double>,std::vector<double>> death_vec;
 //    std::deque<double> Nlimits={0,mf_solution,N+1.0};
 
     std::list<int>::iterator it_min_new;
@@ -656,7 +751,8 @@ int main(int argc, char* argv[]) {
     network_topology net_t(Alpha,Beta,k_max,degrees_in,degrees_out,Adjlist_in,Adjlist_out,beta_cat);
 
 //    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
-    std::pair<std::vector<double>,std::vector<double>>  persistence_extinction = GillespieMC1d(tau,gen,uniform_dist,exponential_dist,N,int(inital_inf_percent*N),start,cat_duration,sims,Alpha,Beta,beta_cat,k);
+    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,start,cat_duration);
+//    std::pair<std::vector<double>,std::vector<double>>  persistence_extinction = GillespieMC1d(tau,gen,uniform_dist,exponential_dist,N,int(inital_inf_percent*N),start,cat_duration,sims,Alpha,Beta,beta_cat,k);
 
 
 //    # pragma omp parallel for //code for parallelization of jobs on cluster
@@ -669,14 +765,14 @@ int main(int argc, char* argv[]) {
 //        std::cout <<j<<std::endl;
 //    }
 
-    auto start_pos_relax=death_vec.begin();
-    std::advance(start_pos_relax,relaxation_time);
+//    auto start_pos_relax=death_vec.begin();
+//    std::advance(start_pos_relax,relaxation_time);
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::cout << "Program execution time: " << duration.count() << " seconds" << std::endl;
     std::string extinction_name="death.csv", parmetername="output_parameters.csv",persistence_name="persistence.csv";
-    write_output_data(persistence_name,persistence_extinction.first);
-    write_output_data(extinction_name,persistence_extinction.second);
+    write_output_data(persistence_name,death_vec.first);
+    write_output_data(extinction_name,death_vec.second);
 //    write_output_data(name_Nlimits,Nlimits);
 //    write_output_data_multi_col(weights_name,net_d.num_inf,net_d.weights);
     std::vector<double> outputparameters={double(duration.count()),double(network_number)};
