@@ -67,10 +67,10 @@ def job_to_cluster(foldername,parameters,Istar,prog):
     os.mkdir(foldername)
     os.chdir(foldername)
     data_path = os.getcwd() +'/'
-    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs = parameters
-    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs=\
+    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,normalization_run = parameters
+    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs, normalization_run=\
     int(N),int(sims),float(start),float(k),float(x),float(lam),float(duartion),int(Num_inf),float(Alpha),int(number_of_networks),float(tau),float(eps_din),float(eps_dout),\
-    float(strength),prog,float(Beta_avg),bool(error_graphs)
+    float(strength),prog,float(Beta_avg),bool(error_graphs),bool(normalization_run)
     G = rand_networks.configuration_model_undirected_graph_mulit_type(k,eps_din,N,prog)
     graph_degrees = np.array([G.degree(n) for n in G.nodes()])
     k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
@@ -111,6 +111,14 @@ def job_to_cluster(foldername,parameters,Istar,prog):
         path_parameters = data_path + 'cparameters_{}.txt'.format(i)
         parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
         os.system('{} {} {}'.format(slurm_path,program_path,parameters_path))
+
+        if normalization_run:
+            parameters_normalization = np.array([N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
+                            strength, prog, dir_path, eps_graph,eps_graph, duartion, Beta, graph_std, graph_skewness,
+                            third_moment, second_moment])
+            parameters_path_norm = '{} {} {}'.format(path_adj_in, path_adj_out, parameters_normalization)
+            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
+
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 
 # def job_to_cluster(foldername,parameters,Istar,prog):
@@ -260,8 +268,11 @@ if __name__ == '__main__':
     parser.add_argument('--Alpha', type=float, help='Recovery rate')
     parser.add_argument('--run_mc_simulation', action='store_true', help='Flag to run MC simulation')
     parser.add_argument('--short_path', action='store_true', help='Flag to measure mean shortest path')
+    parser.add_argument('--normalization_run', action='store_true', help='Flag for running parameter normalization')
+
 
     args = parser.parse_args()
+    normalization_run = args.normalization_run
 
     # Default parameters
     N = 1000 if args.N is None else args.N
@@ -273,6 +284,7 @@ if __name__ == '__main__':
     number_of_networks = 1 if args.number_of_networks is None else args.number_of_networks
     k = 50 if args.k is None else args.k
     error_graphs = args.error_graphs
+    normalization_run = args.normalization_run
 
     sims = 1000 if args.sims is None else args.sims
     tau = 150 if args.tau is None else args.tau
@@ -288,7 +300,8 @@ if __name__ == '__main__':
     # run_mc_simulationtion = True
 
 
-    parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs])
+    parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
+                           eps_dout, strength, prog, Beta_avg, error_graphs,normalization_run])
     graphname = 'GNull'
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, error_graphs)
