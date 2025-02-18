@@ -113,11 +113,21 @@ def job_to_cluster(foldername,parameters,Istar,prog):
         os.system('{} {} {}'.format(slurm_path,program_path,parameters_path))
 
         if normalization_run:
-            parameters_normalization = np.array([N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
-                            strength, prog, dir_path, eps_graph,eps_graph, duartion, Beta, graph_std, graph_skewness,
-                            third_moment, second_moment])
-            parameters_path_norm = '{} {} {}'.format(path_adj_in, path_adj_out, parameters_normalization)
-            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
+            # Go back to the parent directory
+            os.chdir('..')
+            # Create a new folder for the normalization run; for example, append '_normalization' to the original folder name.
+            norm_folder = foldername + '_normalization'
+            if not os.path.exists(norm_folder):
+                os.mkdir(norm_folder)
+            # Change to the newly created normalization folder.
+            os.chdir(norm_folder)
+
+            parameters_normalization = np.array([
+                N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
+                strength, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
+                graph_std, graph_skewness, third_moment, second_moment
+            ])
+            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path))
 
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 
