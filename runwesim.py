@@ -121,14 +121,17 @@ def job_to_cluster(foldername,parameters,Istar,prog):
                 os.mkdir(norm_folder)
             # Change to the newly created normalization folder.
             os.chdir(norm_folder)
-
+            np.save('parameters_all.npy', parameters)
+            np.save('parameters_{}.npy'.format(i), parameters)
+            export_network_to_csv(G, i)
+            export_parameters_to_csv(parameters, i)
             parameters_normalization = np.array([
                 N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
                 strength, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
                 graph_std, graph_skewness, third_moment, second_moment
             ])
             os.system('{} {} {}'.format(slurm_path, program_path, parameters_path))
-
+            os.chdir(data_path)
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 
 # def job_to_cluster(foldername,parameters,Istar,prog):
@@ -291,7 +294,7 @@ if __name__ == '__main__':
     eps_din = 0.1 if args.eps_din is None else args.eps_din
     eps_dout = 0.1 if args.eps_dout is None else args.eps_dout
     # correlation = 0.3 if args.correlation is None else args.correlation
-    number_of_networks = 1 if args.number_of_networks is None else args.number_of_networks
+    number_of_networks = 10 if args.number_of_networks is None else args.number_of_networks
     k = 50 if args.k is None else args.k
     error_graphs = args.error_graphs
     normalization_run = args.normalization_run
