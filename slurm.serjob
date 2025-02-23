@@ -9,7 +9,7 @@ cat > $submit_script << EOF
 #SBATCH --job-name=$JOB_NAME
 #SBATCH --output=$JOB_NAME.%j.txt
 #SBATCH --partition=$partition
-#SBATCH --ntasks=16
+#SBATCH --ntasks=1
 $prog
 rm  $submit_script
 EOF

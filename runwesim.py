@@ -130,7 +130,13 @@ def job_to_cluster(foldername,parameters,Istar,prog):
                 strength, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
                 graph_std, graph_skewness, third_moment, second_moment
             ])
-            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path))
+            data_path_norm = os.getcwd() + '/'
+            np.save('parameters_{}.npy'.format(i), parameters_normalization)
+            path_adj_in_norm = data_path_norm + 'Adjin_{}.txt'.format(i)
+            path_adj_out_norm = data_path_norm + 'Adjout_{}.txt'.format(i)
+            path_parameters_norm = data_path_norm + 'cparameters_{}.txt'.format(i)
+            parameters_path_norm = '{} {} {}'.format(path_adj_in_norm,path_adj_out_norm,path_parameters_norm)
+            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
             os.chdir(data_path)
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 
