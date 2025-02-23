@@ -119,8 +119,6 @@ def job_to_cluster(foldername,parameters,Istar,prog):
             norm_folder = foldername + '_normalization'
             if not os.path.exists(norm_folder):
                 os.mkdir(norm_folder)
-            else:
-                os.chdir(norm_folder)
             # Change to the newly created normalization folder.
             os.chdir(norm_folder)
             np.save('parameters_all.npy', parameters)

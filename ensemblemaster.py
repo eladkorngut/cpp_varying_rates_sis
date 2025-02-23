@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # lam = np.array([1.5,1.6,1.7,1.8])
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
     # eps_din = [0.0, 0.05, 0.1, 0.15, 0.2]
-    eps_din = np.linspace(0.01,1.0,2)
+    eps_din = np.linspace(0.01,1.0,100)
     eps_dout = eps_din
     measurements = np.where(eps_din < 0.2, 1000000, 10000)
     # measurements = 1000000
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     phi = 1.0
     # duartion = 1.0
     # duartion = [0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0]
-    duartion = np.linspace(0.0,5.0,2)
+    duartion = np.linspace(0.0,5.0,100)
 
     strength = 1.0-phi
     # strength = np.ones(len(phi)) - phi
