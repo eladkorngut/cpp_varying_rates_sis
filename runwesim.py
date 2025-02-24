@@ -58,7 +58,7 @@ def export_network_to_csv(G,netname):
             joint = np.concatenate(([degree],outgoing_neighbors),axis=0)
             outgoing_writer.writerow(joint)
 
-def job_to_cluster(foldername,parameters,Istar,prog):
+def job_to_cluster(foldername,parameters,Istar,normalization_run):
     # This function submit jobs to the cluster with the following program keys:
     # bd: creates a bimodal directed networks and find its mean time to extinction
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -67,10 +67,10 @@ def job_to_cluster(foldername,parameters,Istar,prog):
     os.mkdir(foldername)
     os.chdir(foldername)
     data_path = os.getcwd() +'/'
-    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,normalization_run = parameters
-    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs, normalization_run=\
+    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs = parameters
+    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs=\
     int(N),int(sims),float(start),float(k),float(x),float(lam),float(duartion),int(Num_inf),float(Alpha),int(number_of_networks),float(tau),float(eps_din),float(eps_dout),\
-    float(strength),prog,float(Beta_avg),bool(error_graphs),bool(normalization_run)
+    float(strength),prog,float(Beta_avg),bool(error_graphs)
     G = rand_networks.configuration_model_undirected_graph_mulit_type(k,eps_din,N,prog)
     graph_degrees = np.array([G.degree(n) for n in G.nodes()])
     k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
@@ -128,8 +128,7 @@ def job_to_cluster(foldername,parameters,Istar,prog):
             parameters_normalization = np.array([
                 N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
                 strength, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
-                graph_std, graph_skewness, third_moment, second_moment
-            ])
+                graph_std, graph_skewness, third_moment, second_moment])
             data_path_norm = os.getcwd() + '/'
             np.save('parameters_{}.npy'.format(i), parameters_normalization)
             path_adj_in_norm = data_path_norm + 'Adjin_{}.txt'.format(i)
@@ -304,6 +303,8 @@ if __name__ == '__main__':
     k = 50 if args.k is None else args.k
     error_graphs = args.error_graphs
     normalization_run = args.normalization_run
+    # normalization_run = False
+
 
     sims = 1000 if args.sims is None else args.sims
     tau = 150 if args.tau is None else args.tau
@@ -320,13 +321,13 @@ if __name__ == '__main__':
 
 
     parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
-                           eps_dout, strength, prog, Beta_avg, error_graphs,normalization_run])
+                           eps_dout, strength, prog, Beta_avg, error_graphs])
     graphname = 'GNull'
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, error_graphs)
     Istar = (1 - 1/lam) * N
 
-    job_to_cluster(foldername, parameters, Istar,prog)
+    job_to_cluster(foldername, parameters, Istar,normalization_run)
     # act_as_main(foldername, parameters, Istar, prog)
 
 # if __name__ == '__main__':
