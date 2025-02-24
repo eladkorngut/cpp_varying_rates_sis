@@ -58,7 +58,8 @@ def export_network_to_csv(G,netname):
             joint = np.concatenate(([degree],outgoing_neighbors),axis=0)
             outgoing_writer.writerow(joint)
 
-def job_to_cluster(foldername,parameters,Istar,normalization_run):
+# def job_to_cluster(foldername,parameters,Istar,normalization_run):
+def job_to_cluster(foldername, parameters, Istar):
     # This function submit jobs to the cluster with the following program keys:
     # bd: creates a bimodal directed networks and find its mean time to extinction
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -112,31 +113,31 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
         parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
         os.system('{} {} {}'.format(slurm_path,program_path,parameters_path))
 
-        if normalization_run:
-            # Go back to the parent directory
-            os.chdir('..')
-            # Create a new folder for the normalization run; for example, append '_normalization' to the original folder name.
-            norm_folder = foldername + '_normalization'
-            if not os.path.exists(norm_folder):
-                os.mkdir(norm_folder)
-            # Change to the newly created normalization folder.
-            os.chdir(norm_folder)
-            np.save('parameters_all.npy', parameters)
-            np.save('parameters_{}.npy'.format(i), parameters)
-            export_network_to_csv(G, i)
-            export_parameters_to_csv(parameters, i)
-            parameters_normalization = np.array([
-                N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
-                strength, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
-                graph_std, graph_skewness, third_moment, second_moment])
-            data_path_norm = os.getcwd() + '/'
-            np.save('parameters_{}.npy'.format(i), parameters_normalization)
-            path_adj_in_norm = data_path_norm + 'Adjin_{}.txt'.format(i)
-            path_adj_out_norm = data_path_norm + 'Adjout_{}.txt'.format(i)
-            path_parameters_norm = data_path_norm + 'cparameters_{}.txt'.format(i)
-            parameters_path_norm = '{} {} {}'.format(path_adj_in_norm,path_adj_out_norm,path_parameters_norm)
-            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
-            os.chdir(data_path)
+        # if normalization_run:
+        #     # Go back to the parent directory
+        #     os.chdir('..')
+        #     # Create a new folder for the normalization run; for example, append '_normalization' to the original folder name.
+        #     norm_folder = foldername + '_normalization'
+        #     if not os.path.exists(norm_folder):
+        #         os.mkdir(norm_folder)
+        #     # Change to the newly created normalization folder.
+        #     os.chdir(norm_folder)
+        #     np.save('parameters_all.npy', parameters)
+        #     np.save('parameters_{}.npy'.format(i), parameters)
+        #     export_network_to_csv(G, i)
+        #     export_parameters_to_csv(parameters, i)
+        #     parameters_normalization = np.array([
+        #         N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
+        #         strength, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
+        #         graph_std, graph_skewness, third_moment, second_moment])
+        #     data_path_norm = os.getcwd() + '/'
+        #     np.save('parameters_{}.npy'.format(i), parameters_normalization)
+        #     path_adj_in_norm = data_path_norm + 'Adjin_{}.txt'.format(i)
+        #     path_adj_out_norm = data_path_norm + 'Adjout_{}.txt'.format(i)
+        #     path_parameters_norm = data_path_norm + 'cparameters_{}.txt'.format(i)
+        #     parameters_path_norm = '{} {} {}'.format(path_adj_in_norm,path_adj_out_norm,path_parameters_norm)
+        #     os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
+        #     os.chdir(data_path)
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 
 # def job_to_cluster(foldername,parameters,Istar,prog):
@@ -286,11 +287,11 @@ if __name__ == '__main__':
     parser.add_argument('--Alpha', type=float, help='Recovery rate')
     parser.add_argument('--run_mc_simulation', action='store_true', help='Flag to run MC simulation')
     parser.add_argument('--short_path', action='store_true', help='Flag to measure mean shortest path')
-    parser.add_argument('--normalization_run', action='store_true', help='Flag for running parameter normalization')
+    # parser.add_argument('--normalization_run', action='store_true', help='Flag for running parameter normalization')
 
 
     args = parser.parse_args()
-    normalization_run = args.normalization_run
+    # normalization_run = args.normalization_run
 
     # Default parameters
     N = 1000 if args.N is None else args.N
@@ -302,7 +303,7 @@ if __name__ == '__main__':
     number_of_networks = 10 if args.number_of_networks is None else args.number_of_networks
     k = 50 if args.k is None else args.k
     error_graphs = args.error_graphs
-    normalization_run = args.normalization_run
+    # normalization_run = args.normalization_run
     # normalization_run = False
 
 
@@ -327,7 +328,8 @@ if __name__ == '__main__':
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, error_graphs)
     Istar = (1 - 1/lam) * N
 
-    job_to_cluster(foldername, parameters, Istar,normalization_run)
+    # job_to_cluster(foldername, parameters, Istar,normalization_run)
+    job_to_cluster(foldername, parameters, Istar)
     # act_as_main(foldername, parameters, Istar, prog)
 
 # if __name__ == '__main__':
