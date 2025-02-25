@@ -132,7 +132,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
             np.save('parameters_all.npy', parameters_normalization_all)
             np.save('parameters_{}.npy'.format(i), parameters_normalization)
             export_network_to_csv(G, i)
-            export_parameters_to_csv(parameters, i)
+            export_parameters_to_csv(parameters_normalization, i)
             data_path_norm = os.getcwd() + '/'
             np.save('parameters_{}.npy'.format(i), parameters_normalization)
             path_adj_in_norm = data_path_norm + 'Adjin_{}.txt'.format(i)
