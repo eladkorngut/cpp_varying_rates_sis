@@ -33,17 +33,17 @@ if __name__ == '__main__':
     # tau = np.linspace(0.1,2.0,20)
     start = 50
     # phi = np.linspace(0.01,1.0,2)
-    phi = 2.0
-    # duartion = 1.0
+    phi = 1.0
+    duartion = 2.0
     # duartion = [0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0]
-    duartion = np.linspace(0.0,5.0,20)
+    # duartion = np.linspace(0.0,5.0,20)
 
     strength = 1.0-phi
     # strength = np.ones(len(phi)) - phi
     error_graphs = False
 
     # Set this flag as needed:
-    normalization_run = False  # Set to True if you want normalization to run
+    normalization_run = True  # Set to True if you want normalization to run
 
     # Create the flag string based on the value of normalization_run
     normalization_run_flag = '--normalization_run' if normalization_run else ''
