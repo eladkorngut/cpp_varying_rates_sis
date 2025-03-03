@@ -71,7 +71,7 @@ if __name__ == '__main__':
             f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
             f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag}'
         )
-        result = os.system(command)
+        # Initialize variables before first attempt
         result = 1  # Initialize to failure state
         retry_count = 0
         backoff_time = 2  # Start with a short delay
@@ -87,7 +87,7 @@ if __name__ == '__main__':
             retry_count += 1
 
             if retry_count > 20:  # Prevent infinite loops
-                print(f"Failed to submit job for eps_din={i} after 10 attempts. Skipping.")
+                print(f"Failed to submit job for eps_din={i} after 20 attempts. Skipping.")
                 break
 
     # for d in duartion:

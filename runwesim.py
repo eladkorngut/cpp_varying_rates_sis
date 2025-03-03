@@ -111,25 +111,22 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
         path_adj_out = data_path + 'Adjout_{}.txt'.format(i)
         path_parameters = data_path + 'cparameters_{}.txt'.format(i)
         parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
-        result = os.system('{} {} {}'.format(slurm_path,program_path,parameters_path))
-        # Implement exponential backoff for job submission
-        result = 1  # Initialize to failure state
+        # Initialize retry variables BEFORE first attempt
         retry_count = 0
         backoff_time = 2  # Start with a short delay
+        result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path))
 
         while result != 0:
-            if retry_count > 0:
-                print(f"Retry #{retry_count} for network {i}, waiting {backoff_time} seconds...")
-                time.sleep(backoff_time)
-                # Exponential backoff - increase wait time with each failure
-                backoff_time = min(backoff_time * 2, 30)  # Cap at 30 seconds
-
-            result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path))
             retry_count += 1
-
             if retry_count > 20:  # Prevent infinite loops
                 print(f"Failed to submit job for network {i} after 20 attempts. Skipping.")
                 break
+
+            print(f"Retry #{retry_count} for network {i}, waiting {backoff_time} seconds...")
+            time.sleep(backoff_time)
+            # Exponential backoff - increase wait time with each failure
+            backoff_time = min(backoff_time * 2, 30)  # Cap at 30 seconds
+            result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path))
 
         if normalization_run:
             # Go back to the parent directory
@@ -159,22 +156,21 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
             path_parameters_norm = data_path_norm + 'cparameters_{}.txt'.format(i)
             parameters_path_norm = '{} {} {}'.format(path_adj_in_norm,path_adj_out_norm,path_parameters_norm)
             result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
-            # Apply the same exponential backoff strategy for normalization runs
-            result = 1
+            # Initialize retry variables BEFORE first attempt for normalization run
             retry_count = 0
             backoff_time = 2
+            result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
 
             while result != 0:
-                if retry_count > 0:
-                    print(f"Retry #{retry_count} for normalization run network {i}, waiting {backoff_time} seconds...")
-                    time.sleep(backoff_time)
-                    backoff_time = min(backoff_time * 2, 30)
-
-                result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
                 retry_count += 1
                 if retry_count > 20:
                     print(f"Failed to submit normalization job for network {i} after 20 attempts. Skipping.")
                     break
+
+                print(f"Retry #{retry_count} for normalization run network {i}, waiting {backoff_time} seconds...")
+                time.sleep(backoff_time)
+                backoff_time = min(backoff_time * 2, 30)
+                result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
             os.chdir(data_path)
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 
