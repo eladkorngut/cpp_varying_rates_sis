@@ -110,7 +110,12 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
         path_adj_out = data_path + 'Adjout_{}.txt'.format(i)
         path_parameters = data_path + 'cparameters_{}.txt'.format(i)
         parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
-        os.system('{} {} {}'.format(slurm_path,program_path,parameters_path))
+        result = os.system('{} {} {}'.format(slurm_path,program_path,parameters_path))
+        if result != 0:
+            print(f"Submission failed for eps_din={i}, waiting 10 seconds before retrying...")
+            time.sleep(10)
+            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path))        # Try again
+        time.sleep(1)  # Wait 1 second between submissions
 
         if normalization_run:
             # Go back to the parent directory
@@ -139,7 +144,12 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
             path_adj_out_norm = data_path_norm + 'Adjout_{}.txt'.format(i)
             path_parameters_norm = data_path_norm + 'cparameters_{}.txt'.format(i)
             parameters_path_norm = '{} {} {}'.format(path_adj_in_norm,path_adj_out_norm,path_parameters_norm)
-            os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
+            result = os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))
+            if result != 0:
+                print(f"Submission failed for eps_din={i}, waiting 10 seconds before retrying...")
+                time.sleep(10)
+                os.system('{} {} {}'.format(slurm_path, program_path, parameters_path_norm))  # Try again
+            time.sleep(1)  # Wait 1 second between submissions
             os.chdir(data_path)
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
 

@@ -2,6 +2,7 @@
 
 import os
 import numpy as np
+import time
 
 if __name__ == '__main__':
 
@@ -70,7 +71,12 @@ if __name__ == '__main__':
             f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
             f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag}'
         )
-        os.system(command)
+        result = os.system(command)
+        if result != 0:
+            print(f"Submission failed for eps_din={i}, waiting 30 seconds before retrying...")
+            time.sleep(10)
+            result = os.system(command)  # Try again
+        time.sleep(1)  # Wait 1 second between submissions
 
     # for d in duartion:
     #     for i, j in zip(loop_over, sims):
