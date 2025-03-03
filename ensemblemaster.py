@@ -72,11 +72,23 @@ if __name__ == '__main__':
             f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag}'
         )
         result = os.system(command)
-        if result != 0:
-            print(f"Submission failed for eps_din={i}, waiting 30 seconds before retrying...")
-            time.sleep(10)
-            result = os.system(command)  # Try again
-        time.sleep(1)  # Wait 1 second between submissions
+        result = 1  # Initialize to failure state
+        retry_count = 0
+        backoff_time = 2  # Start with a short delay
+
+        while result != 0:
+            if retry_count > 0:
+                print(f"Retry #{retry_count} for eps_din={i}, waiting {backoff_time} seconds...")
+                time.sleep(backoff_time)
+                # Exponential backoff - increase wait time with each failure
+                backoff_time = min(backoff_time * 2, 30)  # Cap at 30 seconds
+
+            result = os.system(command)
+            retry_count += 1
+
+            if retry_count > 20:  # Prevent infinite loops
+                print(f"Failed to submit job for eps_din={i} after 10 attempts. Skipping.")
+                break
 
     # for d in duartion:
     #     for i, j in zip(loop_over, sims):
