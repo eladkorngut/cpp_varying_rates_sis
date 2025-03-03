@@ -6,6 +6,7 @@ import pickle
 import networkx as nx
 from scipy.stats import skew
 import argparse
+import time
 
 def export_parameters_to_csv(parameters,network_number):
     name_parameters = 'cparameters_{}.txt'.format(network_number)
