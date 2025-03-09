@@ -207,7 +207,7 @@ if __name__ == '__main__':
 
     # Default parameters
     N = 1000 if args.N is None else args.N
-    prog = 'gam' if args.prog is None else args.prog
+    prog = 'homo' if args.prog is None else args.prog
     lam = 1.2 if args.lam is None else args.lam
     eps_din = 0.1 if args.eps_din is None else args.eps_din
     eps_dout = 0.1 if args.eps_dout is None else args.eps_dout

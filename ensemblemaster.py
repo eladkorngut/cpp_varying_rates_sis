@@ -5,38 +5,6 @@ import numpy as np
 import time
 
 
-def submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
-               error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
-               Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path):
-    error_graphs_flag = '--error_graphs' if error_graphs else ''
-    run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
-    attempts = 20
-    command = (
-        f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din} '
-        f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
-        f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
-        f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
-        f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag}'
-    )
-
-    result = 1
-    retry_count = 0
-    backoff_time = 0.1
-
-    while result != 0:
-        if retry_count > 0:
-            print(f"Retry #{retry_count} for eps_din={eps_din}, waiting {backoff_time} seconds...")
-            time.sleep(backoff_time)
-            backoff_time = min(backoff_time * 2, 0.5)
-
-        result = os.system(command)
-        retry_count += 1
-
-        if retry_count > attempts:
-            print(f"Failed to submit job for eps_din={eps_din} after {attempts} attempts. Skipping.")
-            break
-
-
 if __name__ == '__main__':
 
     # Netwrok parameters
@@ -49,8 +17,8 @@ if __name__ == '__main__':
     # lam = np.array([1.5,1.6,1.7,1.8])
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
     # eps_din = [0.0, 0.05, 0.1, 0.15, 0.2]
-    # eps_din = np.linspace(0.01, 1.0, 2)
-    eps_din = 0.2
+    eps_din = np.linspace(0.01, 1.0, 2)
+    # eps_din = 0.2
     eps_dout = eps_din
     # measurements = 1000000
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
@@ -94,6 +62,40 @@ if __name__ == '__main__':
     run_mc_simulation = False
     heatmap = True
 
+
+    def submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
+                   error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
+                   Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path):
+        error_graphs_flag = '--error_graphs' if error_graphs else ''
+        run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
+        attempts = 20
+        command = (
+            f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din} '
+            f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
+            f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
+            f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
+            f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag}'
+        )
+
+        result = 1
+        retry_count = 0
+        backoff_time = 0.1
+
+        while result != 0:
+            if retry_count > 0:
+                print(f"Retry #{retry_count} for eps_din={eps_din}, waiting {backoff_time} seconds...")
+                time.sleep(backoff_time)
+                backoff_time = min(backoff_time * 2, 0.5)
+
+            result = os.system(command)
+            retry_count += 1
+
+            if retry_count > attempts:
+                print(f"Failed to submit job for eps_din={eps_din} after {attempts} attempts. Skipping.")
+                break
+
+
+
     if heatmap:
         measurements = np.where(eps_din < 0.2, 1000000, 10000)
         sims = (measurements/number_of_networks).astype(int)
@@ -101,15 +103,15 @@ if __name__ == '__main__':
         duartion = np.linspace(0.01, 5.0, 2)
         for d in duartion:
             for i, j in zip(loop_over, sims):
-                submit_job(N, prog, lam, i, i, correlation, number_of_networks, k,
-                           error_graphs, j, tau, start, d, strength, relaxation_time, x,
-                           Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path)
+                submit_job(N, prog, lam, i, i, correlation, number_of_networks, k,error_graphs, j, tau, start, d,
+                           strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag, slurm_path,
+                           program_path)
     else:
         measurements = 1000000
         duartion = np.linspace(0.01,2.0,20)
         sims = int(measurements/number_of_networks)
         loop_over = duartion
         for i in loop_over:
-            submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
-                       error_graphs, sims, tau, start, i, strength, relaxation_time, x,
-                       Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path)
+            submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,error_graphs, sims, tau,
+                       start, i, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
+                       slurm_path, program_path)

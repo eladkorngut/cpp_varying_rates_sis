@@ -915,6 +915,8 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type):
                 return G
             elif net_type=='complete':
                 return nx.complete_graph(N)
+            elif net_type=='homo':
+                return nx.random_regular_graph(int(kavg),N)
             if np.sum(d)%2!=0:
                 d[int(len(d)*np.random.random())]+=1
             G = nx.configuration_model(d)
