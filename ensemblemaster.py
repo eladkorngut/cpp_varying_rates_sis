@@ -60,11 +60,11 @@ if __name__ == '__main__':
     slurm_path = dir_path + '/slurm.serjob python3'
     program_path = dir_path + '/runwesim.py'
     run_mc_simulation = False
-    heatmap = True
+    heatmap = False
 
 
     def submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
-                   error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
+                   error_graphs, sims, tau, start, duration, strength, relaxation_time, x,
                    Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path):
         error_graphs_flag = '--error_graphs' if error_graphs else ''
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
@@ -72,7 +72,7 @@ if __name__ == '__main__':
         command = (
             f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din} '
             f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
-            f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
+            f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duration {duration} '
             f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
             f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag}'
         )
@@ -94,8 +94,6 @@ if __name__ == '__main__':
                 print(f"Failed to submit job for eps_din={eps_din} after {attempts} attempts. Skipping.")
                 break
 
-
-
     if heatmap:
         measurements = np.where(eps_din < 0.2, 1000000, 10000)
         sims = (measurements/number_of_networks).astype(int)
@@ -111,6 +109,9 @@ if __name__ == '__main__':
         duartion = np.linspace(0.01,2.0,20)
         sims = int(measurements/number_of_networks)
         loop_over = duartion
+        # phi = np.linspace(0.01, 1.0, 20)
+        # strength = np.ones(len(phi)) - phi
+        # loop_over = strength
         for i in loop_over:
             submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,error_graphs, sims, tau,
                        start, i, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
