@@ -7,6 +7,7 @@ import networkx as nx
 from scipy.stats import skew
 import argparse
 import time
+from scipy.sparse.linalg import eigsh
 
 def export_parameters_to_csv(parameters,network_number):
     name_parameters = 'cparameters_{}.txt'.format(network_number)
@@ -95,38 +96,61 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
     os.mkdir(foldername)
     os.chdir(foldername)
     data_path = os.getcwd() +'/'
-    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs = parameters
-    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs=\
+    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation = parameters
+    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation=\
     int(N),int(sims),float(start),float(k),float(x),float(lam),float(duartion),int(Num_inf),float(Alpha),int(number_of_networks),float(tau),float(eps_din),float(eps_dout),\
-    float(strength),prog,float(Beta_avg),bool(error_graphs)
-    G = rand_networks.configuration_model_undirected_graph_mulit_type(k,eps_din,N,prog)
-    graph_degrees = np.array([G.degree(n) for n in G.nodes()])
-    k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
-    second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
-    eps_graph = graph_std / k_avg_graph
-    Beta_graph = float(lam)/k_avg_graph
-    Beta = Beta_graph / (1 + eps_graph ** 2)
-    parameters = np.array(
-        [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
-         dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment])
-    np.save('parameters_all.npy', parameters)
+    float(strength),prog,float(Beta_avg),bool(error_graphs),float(correlation)
+    if 'prog'!='1d':
+        G = rand_networks.configuration_model_undirected_graph_mulit_type(k,eps_din,N,prog,correlation)
+        graph_degrees = np.array([G.degree(n) for n in G.nodes()])
+        k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
+        second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
+        eps_graph = graph_std / k_avg_graph
+        largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
+                                                         return_eigenvectors=True)
+        Beta = float(lam) / largest_eigenvalue[0]
+        graph_correlation = nx.degree_assortativity_coefficient(G)
+        parameters = np.array(
+            [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
+             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
+        np.save('parameters_all.npy', parameters)
+    else:
+        G = nx.random_regular_graph(k, N)
+        eps_graph = 0
+        k_avg_graph,graph_std,graph_skewness = k,0.0,0.0
+        second_moment,third_moment = 0.0,0.0
+        graph_correlation = 0.0
+        Beta_graph = float(lam)/k_avg_graph
+        Beta = Beta_graph
+        parameters = np.array(
+            [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
+             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
+        np.save('parameters_all.npy', parameters)
 
     for i in range(int(number_of_networks)):
         if error_graphs==False:
-            G = rand_networks.configuration_model_undirected_graph_mulit_type(float(k),float(eps_din),int(N),prog)
-            graph_degrees = np.array([G.degree(n) for n in G.nodes()])
-            k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(graph_degrees)
-            second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
-            eps_graph = graph_std / k_avg_graph
-            # third_moment = graph_skewness * (graph_std ** 3)
-            Beta_graph = float(lam)/k_avg_graph
-            Beta = Beta_graph / (1 + eps_graph ** 2)
-            infile = 'GNull_{}.pickle'.format(i)
-            with open(infile, 'wb') as f:
-                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
-            nx.write_gpickle(G, infile)
+            if prog!='1d':
+                G = rand_networks.configuration_model_undirected_graph_mulit_type(float(k),float(eps_din),int(N),prog)
+                graph_degrees = np.array([G.degree(n) for n in G.nodes()])
+                k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(graph_degrees)
+                second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
+                eps_graph = graph_std / k_avg_graph
+                # third_moment = graph_skewness * (graph_std ** 3)
+                largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
+                                                                 return_eigenvectors=True)
+                Beta = float(lam) / largest_eigenvalue[0]
+                infile = 'GNull_{}.pickle'.format(i)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
+                nx.write_gpickle(G, infile)
+            else:
+                G = nx.random_regular_graph(k,N)
+                k_avg_graph, graph_std, graph_skewness = k, 0.0, 0.0
+                second_moment,third_moment = 0.0,0.0
+                eps_graph = graph_std / k_avg_graph
+        graph_correlation = nx.degree_assortativity_coefficient(G)
         parameters = np.array([N,sims,start,k_avg_graph,x,lam,Alpha,Beta,i,tau,Istar,strength,prog,dir_path,eps_graph,
-                               eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment])
+                               eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment,graph_correlation])
         np.save('parameters_{}.npy'.format(i), parameters)
         # infile = 'GNull_{}.pickle'.format(i)
         # with open(infile,'wb') as f:
@@ -211,7 +235,7 @@ if __name__ == '__main__':
     lam = 1.2 if args.lam is None else args.lam
     eps_din = 0.1 if args.eps_din is None else args.eps_din
     eps_dout = 0.1 if args.eps_dout is None else args.eps_dout
-    # correlation = 0.3 if args.correlation is None else args.correlation
+    correlation = 0.3 if args.correlation is None else args.correlation
     number_of_networks = 10 if args.number_of_networks is None else args.number_of_networks
     k = 50 if args.k is None else args.k
     error_graphs = args.error_graphs
@@ -234,11 +258,10 @@ if __name__ == '__main__':
 
 
     parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
-                           eps_dout, strength, prog, Beta_avg, error_graphs])
+                           eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
     graphname = 'GNull'
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, error_graphs)
     Istar = (1 - 1/lam) * N
-
     job_to_cluster(foldername, parameters, Istar,normalization_run)
     # act_as_main(foldername, parameters, Istar, prog)

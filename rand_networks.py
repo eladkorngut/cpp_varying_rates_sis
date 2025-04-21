@@ -890,16 +890,98 @@ def find_multi_k_binary_search(kavg,epsilon,n,net_type):
     return G_mid,(low + high) / 2
 
 
-def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type):
+def xulvi_brunet_sokolov_target_assortativity(G, target_assortativity, current_assortativity,tolerance=0.05, max_iterations=10000):
+    """
+    Adjusts the graph G using the Xulvi-Brunet–Sokolov algorithm to achieve a target assortativity.
+
+    Parameters:
+        G (networkx.Graph): The input graph to be rewired.
+        target_assortativity (float): The desired assortativity coefficient (can be negative for disassortativity).
+        tolerance (float): The acceptable difference between the current and target assortativity.
+        max_iterations (int): Maximum number of iterations to perform.
+
+    Returns:
+        networkx.Graph: The rewired graph with the target assortativity.
+        float: The achieved assortativity.
+    """
+
+    edges = list(G.edges())
+    iteration = 0
+    step = 100 if np.abs(target_assortativity)>0.01 else 1
+    while np.abs(target_assortativity-current_assortativity)/np.abs(target_assortativity) > tolerance and iteration < max_iterations:
+        # Randomly select two distinct edges (u, v) and (x, y)
+        (u, v), (x, y) = random.sample(edges, 2)
+
+        if len({u, v, x, y}) == 4 and not G.has_edge(u, y) and not G.has_edge(x, v):
+            k_u, k_v = G.degree[u], G.degree[v]
+            k_x, k_y = G.degree[x], G.degree[y]
+
+            current_diff = abs(k_u - k_v) + abs(k_x - k_y)
+            new_diff = abs(k_u - k_y) + abs(k_x - k_v)
+
+            if (target_assortativity > 0 and new_diff < current_diff) or \
+                    (target_assortativity < 0 and new_diff > current_diff):
+                G.remove_edge(u, v)
+                G.remove_edge(x, y)
+                G.add_edge(u, y)
+                G.add_edge(x, v)
+
+                edges.remove((u, v))
+                edges.remove((x, y))
+                edges.append((u, y))
+                edges.append((x, v))
+
+                if iteration%step==0 and step>1:
+                    current_assortativity = nx.degree_assortativity_coefficient(G)
+                    if np.abs(current_assortativity)>np.abs(target_assortativity):
+                        step=1
+        iteration += 1
+
+    return G, current_assortativity
+
+
+def create_correlation(degrees, alpha):
+    nodes_per_degree = [np.where(degrees == degree_i)[0] for degree_i in range(max(degrees)+1)]
+    final_pair_list = []
+
+    # number_of_nodes_per_degree = np.rint(self.p_k(range(self.network_size), *self.dist_args) * n).astype(int)
+
+    for i, nodes_i in enumerate(nodes_per_degree):
+        if len(nodes_i) <= 1:
+            continue
+        int_node_number = int(np.round(i * alpha))
+        if int_node_number == 0:
+            continue
+        available_edges = nodes_i.tolist() * int_node_number
+        np.random.shuffle(available_edges)
+        pair_set = list(zip(available_edges[::2], available_edges[1::2]))
+        pair_set = [(x,y) for x, y in pair_set if x != y]
+        pair_set = [(x,y) if x < y else (y, x) for x, y in pair_set]
+        pair_set = np.unique(pair_set, axis=0)
+        for x, y in pair_set:
+            degrees[x] -= 1
+            degrees[y] -= 1
+
+        final_pair_list.extend(pair_set.tolist())
+
+    return degrees, final_pair_list
+
+
+
+def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,correlation_factor):
     k_avg_graph = 0
+    correlation_graph = 2.0 if correlation_factor!=0 else 0.0
+    high_correlation, low_correlation = 1.0, correlation_factor
+    mid_correlation = (low_correlation + high_correlation) / 2 if net_type!='bd' else correlation_factor
+    correlation_norm = correlation_factor if correlation_factor!=0 else 2.0
     if N>50:
-        while np.abs(kavg-k_avg_graph)/kavg>0.05:
+        while np.abs(kavg-k_avg_graph)/kavg>0.05 or (np.abs(correlation_factor-correlation_graph)/correlation_norm>0.05):
             if net_type=='ig':
                 wald_mu, wald_lambda = kavg, kavg / epsilon ** 2
                 d = numpy.random.default_rng().wald(wald_mu,wald_lambda,N).astype(int)
             elif net_type=='bet':
                 alpha_beta_dist,beta_beta_dist = (N - kavg * (1 + epsilon ** 2)) / (N * epsilon ** 2),((kavg - N) * (kavg - N + kavg * epsilon ** 2)) / (kavg * N * epsilon ** 2)
-                d=random.default_rng().beta((alpha_beta_dist,beta_beta_dist,N)*N,N).astype(int)
+                d= (numpy.random.default_rng().beta(alpha_beta_dist,beta_beta_dist,N)*N).astype(int)
             elif net_type=='ln':
                 mu_log_norm,sigma_log_norm = -(1 / 2) * np.log((1 + epsilon ** 2) / kavg ** 2),np.sqrt(2 * np.log(kavg) + np.log((1 + epsilon ** 2) / kavg ** 2))
                 d = numpy.random.lognormal(mu_log_norm,sigma_log_norm,N).astype(int)
@@ -919,10 +1001,28 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type):
                 return nx.random_regular_graph(int(kavg),N)
             if np.sum(d)%2!=0:
                 d[int(len(d)*np.random.random())]+=1
+            if correlation_factor > 0:
+                d, correlated_nodes = create_correlation(d, mid_correlation)
             G = nx.configuration_model(d)
             G = nx.Graph(G)
+            G.add_edges_from(correlated_nodes)
             G.remove_edges_from(nx.selfloop_edges(G))
             k_avg_graph = np.mean([G.degree(n) for n in G.nodes()])
+            correlation_graph = nx.degree_assortativity_coefficient(G) if net_type != 'h' else 0
+
+            if correlation_graph < correlation_factor and correlation_factor > 0:
+                low_correlation = mid_correlation
+            else:
+                high_correlation = mid_correlation
+            mid_correlation = (high_correlation + low_correlation) / 2
+
+            if correlation_factor < 0 or net_type == 'gampgp':
+                G, correlation_graph = xulvi_brunet_sokolov_target_assortativity(G, correlation_factor,
+                                                                                 correlation_graph, 0.05, 1000000)
+                if np.abs(kavg - k_avg_graph) / kavg > 0.05:
+                    return G, np.array([G.degree(n) for n in G.nodes()])
+
+
         return G
     G,kavg_graph = find_multi_k_binary_search(kavg,epsilon,N,net_type)
     return G
@@ -1058,9 +1158,9 @@ if __name__ == '__main__':
     # class CustomDistribution(rv_discrete):
     #     def _pmf(self, k, a, b):
     #         return b * a / (1 + b * k) ** (a + 1)
-    k,epsilon,N,net_type= 20,1.5,100000,'bet'
+    k,epsilon,N,net_type,correlation_factor= 20,1.5,100000,'bet',0.1
     # G = configuration_model_undirected_graph_gamma(k,epsilon,N)
-    G = configuration_model_undirected_graph_mulit_type(k,epsilon,N,net_type)
+    G = configuration_model_undirected_graph_mulit_type(k,epsilon,N,net_type,correlation_factor)
     plot_gamma_distribution(G,k,epsilon,N,net_type)
     # custom_dist = CustomDistribution()
     # a,k,n=10.0,20,10000

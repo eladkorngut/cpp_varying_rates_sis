@@ -70,7 +70,7 @@ if __name__ == '__main__':
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
         attempts = 20
         command = (
-            f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din} '
+            f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din} --correlation {correlation}'
             f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
             f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
             f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '

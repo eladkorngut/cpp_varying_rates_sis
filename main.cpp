@@ -751,7 +751,12 @@ int main(int argc, char* argv[]) {
     network_topology net_t(Alpha,Beta,k_max,degrees_in,degrees_out,Adjlist_in,Adjlist_out,beta_cat);
 
 //    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,cat_start,cat_duration);
-    death_vec = GillespieMC(tau,gen,uniform_dist,exponential_dist,net_d,net_t,start,cat_duration);
+    if (eps_din!=0.0) {
+        death_vec = GillespieMC(tau, gen, uniform_dist, exponential_dist, net_d, net_t, start, cat_duration);
+    } else {
+        death_vec = GillespieMC1d(tau, gen, uniform_dist, exponential_dist, N, int(inital_inf_percent * N), start,
+                                  cat_duration, sims, Alpha, Beta, beta_cat, k);
+    }
 //    std::pair<std::vector<double>,std::vector<double>>  persistence_extinction = GillespieMC1d(tau,gen,uniform_dist,exponential_dist,N,int(inital_inf_percent*N),start,cat_duration,sims,Alpha,Beta,beta_cat,k);
 
 
