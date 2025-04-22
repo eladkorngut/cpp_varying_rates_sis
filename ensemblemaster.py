@@ -12,17 +12,18 @@ if __name__ == '__main__':
     # N = [300,400,500,600,700,800,900,1000,1100,1200,1300,1400]
     N = 1000
     prog = 'gam'
-    lam = 1.24
+    lam = 1.2
     # lam = 1+np.logspace(-2,0,9)
     # lam = np.array([1.5,1.6,1.7,1.8])
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
     # eps_din = [0.0, 0.05, 0.1, 0.15, 0.2]
-    eps_din = np.linspace(0.01, 1.0, 2)
-    # eps_din = 0.2
+    # eps_din = np.linspace(0.01, 1.0, 5)
+    eps_din = 0.5
     eps_dout = eps_din
     # measurements = 1000000
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
-    correlation = 0.0
+    correlation = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
+    # correlation = 0.1
     number_of_networks = 10
     # k = [50]
     k= 50
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     start = 50
     # phi = np.linspace(0.01,1.0,2)
     phi = 1.0
-    # duartion = 2.0
+    duartion = 1.0
     # duartion = [0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0]
     # duartion = np.linspace(0.01,5.0,2)
 
@@ -70,7 +71,7 @@ if __name__ == '__main__':
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
         attempts = 20
         command = (
-            f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din}'
+            f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din} '
             f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
             f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
             f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
@@ -108,10 +109,10 @@ if __name__ == '__main__':
                            program_path)
     else:
         measurements = 1000000
-        duartion = np.linspace(0.01,2.0,20)
+        # duartion = np.linspace(0.01,2.0,20)
         sims = int(measurements/number_of_networks)
-        loop_over = duartion
+        loop_over = correlation
         for i in loop_over:
-            submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,error_graphs, sims, tau,
-                       start, i, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
+            submit_job(N, prog, lam, i, i, correlation, number_of_networks, k,error_graphs, sims, tau,
+                       start, duartion, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
                        slurm_path, program_path)
