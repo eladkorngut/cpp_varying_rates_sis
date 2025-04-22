@@ -1020,7 +1020,7 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
                 G, correlation_graph = xulvi_brunet_sokolov_target_assortativity(G, correlation_factor,
                                                                                  correlation_graph, 0.05, 1000000)
                 if np.abs(kavg - k_avg_graph) / kavg > 0.05:
-                    return G, np.array([G.degree(n) for n in G.nodes()])
+                    return G
 
         return G
     G,kavg_graph = find_multi_k_binary_search(kavg,epsilon,N,net_type)
@@ -1157,7 +1157,7 @@ if __name__ == '__main__':
     # class CustomDistribution(rv_discrete):
     #     def _pmf(self, k, a, b):
     #         return b * a / (1 + b * k) ** (a + 1)
-    k,epsilon,N,net_type,correlation_factor= 20,1.5,100000,'bet',-0.1
+    k,epsilon,N,net_type,correlation_factor= 50,1.5,1000,'gam',-0.5
     # G = configuration_model_undirected_graph_gamma(k,epsilon,N)
     G = configuration_model_undirected_graph_mulit_type(k,epsilon,N,net_type,correlation_factor)
     plot_gamma_distribution(G,k,epsilon,N,net_type)

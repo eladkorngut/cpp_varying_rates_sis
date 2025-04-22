@@ -97,7 +97,8 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
     os.chdir(foldername)
     data_path = os.getcwd() +'/'
     N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation = parameters
-    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation=\
+    N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, \
+    eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation=\
     int(N),int(sims),float(start),float(k),float(x),float(lam),float(duartion),int(Num_inf),float(Alpha),int(number_of_networks),float(tau),float(eps_din),float(eps_dout),\
     float(strength),prog,float(Beta_avg),bool(error_graphs),float(correlation)
     if 'prog'!='1d':
