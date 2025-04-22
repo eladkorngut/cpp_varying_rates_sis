@@ -113,6 +113,6 @@ if __name__ == '__main__':
         sims = int(measurements/number_of_networks)
         loop_over = correlation
         for i in loop_over:
-            submit_job(N, prog, lam, i, i, correlation, number_of_networks, k,error_graphs, sims, tau,
+            submit_job(N, prog, lam, eps_din, eps_dout, i, number_of_networks, k,error_graphs, sims, tau,
                        start, duartion, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
                        slurm_path, program_path)
