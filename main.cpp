@@ -699,7 +699,7 @@ int main(int argc, char* argv[]) {
             k=std::get<3>(parameter_list),network_number=std::get<8>(parameter_list);
     double inital_inf_percent=std::get<4>(parameter_list),lam=std::get<5>(parameter_list),Alpha=std::get<6>(parameter_list)
     ,Beta=std::get<7>(parameter_list),tau=std::get<9>(parameter_list),mf_solution=std::get<10>(parameter_list),
-            cat_duration=std::get<16>(parameter_list),beta_cat=std::get<17>(parameter_list);
+            cat_duration=std::get<16>(parameter_list),beta_cat=std::get<17>(parameter_list), eps_din=std::get<14>(parameter_list);
     std::string dir_path(std::get<13>(parameter_list)),prog=std::get<12>(parameter_list);
     int steps_c(sims),k_max(0),k_max_out(0); // Need to find ouf which dimension i np.size(n,1) refers to
     std::list<double> weights(sims,1.0/double(sims)),wg(sims,1.0/double(sims)),avec_sum(sims,0),t(sims,0);
