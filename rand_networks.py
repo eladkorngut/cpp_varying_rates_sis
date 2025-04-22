@@ -1001,11 +1001,11 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
                 return nx.random_regular_graph(int(kavg),N)
             if np.sum(d)%2!=0:
                 d[int(len(d)*np.random.random())]+=1
-            if correlation_factor > 0:
-                d, correlated_nodes = create_correlation(d, mid_correlation)
             G = nx.configuration_model(d)
             G = nx.Graph(G)
-            G.add_edges_from(correlated_nodes)
+            if correlation_factor > 0:
+                d, correlated_nodes = create_correlation(d, mid_correlation)
+                G.add_edges_from(correlated_nodes)
             G.remove_edges_from(nx.selfloop_edges(G))
             k_avg_graph = np.mean([G.degree(n) for n in G.nodes()])
             correlation_graph = nx.degree_assortativity_coefficient(G) if net_type != 'h' else 0
@@ -1021,7 +1021,6 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
                                                                                  correlation_graph, 0.05, 1000000)
                 if np.abs(kavg - k_avg_graph) / kavg > 0.05:
                     return G, np.array([G.degree(n) for n in G.nodes()])
-
 
         return G
     G,kavg_graph = find_multi_k_binary_search(kavg,epsilon,N,net_type)
@@ -1158,7 +1157,7 @@ if __name__ == '__main__':
     # class CustomDistribution(rv_discrete):
     #     def _pmf(self, k, a, b):
     #         return b * a / (1 + b * k) ** (a + 1)
-    k,epsilon,N,net_type,correlation_factor= 20,1.5,100000,'bet',0.1
+    k,epsilon,N,net_type,correlation_factor= 20,1.5,100000,'bet',-0.1
     # G = configuration_model_undirected_graph_gamma(k,epsilon,N)
     G = configuration_model_undirected_graph_mulit_type(k,epsilon,N,net_type,correlation_factor)
     plot_gamma_distribution(G,k,epsilon,N,net_type)
