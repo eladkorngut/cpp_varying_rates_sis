@@ -1016,7 +1016,7 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
                 high_correlation = mid_correlation
             mid_correlation = (high_correlation + low_correlation) / 2
 
-            if correlation_factor < 0 or net_type == 'gampgp':
+            if correlation_factor < 0 or net_type == 'gam':
                 G, correlation_graph = xulvi_brunet_sokolov_target_assortativity(G, correlation_factor,
                                                                                  correlation_graph, 0.05, 1000000)
                 # if np.abs(kavg - k_avg_graph) / kavg > 0.05:
@@ -1157,7 +1157,7 @@ if __name__ == '__main__':
     # class CustomDistribution(rv_discrete):
     #     def _pmf(self, k, a, b):
     #         return b * a / (1 + b * k) ** (a + 1)
-    k,epsilon,N,net_type,correlation_factor= 50,0.5,1000,'gam',-0.2
+    k,epsilon,N,net_type,correlation_factor= 50,0.5,1000,'gam',0.4
     # G = configuration_model_undirected_graph_gamma(k,epsilon,N)
     G = configuration_model_undirected_graph_mulit_type(k,epsilon,N,net_type,correlation_factor)
     plot_gamma_distribution(G,k,epsilon,N,net_type)
