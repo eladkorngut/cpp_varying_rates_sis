@@ -975,7 +975,7 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
     mid_correlation = (low_correlation + high_correlation) / 2 if net_type!='bd' else correlation_factor
     correlation_norm = correlation_factor if correlation_factor!=0 else 2.0
     if N>50:
-        while np.abs(kavg-k_avg_graph)/kavg>0.05 or (np.abs(correlation_factor-correlation_graph)/correlation_norm>0.05):
+        while np.abs(kavg-k_avg_graph)/kavg>0.2 or (np.abs(correlation_factor-correlation_graph)/correlation_norm>0.2):
             if net_type=='ig':
                 wald_mu, wald_lambda = kavg, kavg / epsilon ** 2
                 d = numpy.random.default_rng().wald(wald_mu,wald_lambda,N).astype(int)
@@ -1019,8 +1019,8 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
             if correlation_factor < 0 or net_type == 'gampgp':
                 G, correlation_graph = xulvi_brunet_sokolov_target_assortativity(G, correlation_factor,
                                                                                  correlation_graph, 0.05, 1000000)
-                if np.abs(kavg - k_avg_graph) / kavg > 0.05:
-                    return G
+                # if np.abs(kavg - k_avg_graph) / kavg > 0.05:
+                #     return G
 
         return G
     G,kavg_graph = find_multi_k_binary_search(kavg,epsilon,N,net_type)
@@ -1157,7 +1157,7 @@ if __name__ == '__main__':
     # class CustomDistribution(rv_discrete):
     #     def _pmf(self, k, a, b):
     #         return b * a / (1 + b * k) ** (a + 1)
-    k,epsilon,N,net_type,correlation_factor= 50,1.5,1000,'gam',-0.5
+    k,epsilon,N,net_type,correlation_factor= 50,0.5,1000,'gam',-0.2
     # G = configuration_model_undirected_graph_gamma(k,epsilon,N)
     G = configuration_model_undirected_graph_mulit_type(k,epsilon,N,net_type,correlation_factor)
     plot_gamma_distribution(G,k,epsilon,N,net_type)

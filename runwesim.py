@@ -232,16 +232,16 @@ if __name__ == '__main__':
 
     # Default parameters
     N = 1000 if args.N is None else args.N
-    prog = 'homo' if args.prog is None else args.prog
+    prog = 'gam' if args.prog is None else args.prog
     lam = 1.2 if args.lam is None else args.lam
-    eps_din = 0.1 if args.eps_din is None else args.eps_din
-    eps_dout = 0.1 if args.eps_dout is None else args.eps_dout
-    correlation = 0.3 if args.correlation is None else args.correlation
+    eps_din = 0.5 if args.eps_din is None else args.eps_din
+    eps_dout = 0.5 if args.eps_dout is None else args.eps_dout
+    correlation = -0.1 if args.correlation is None else args.correlation
     number_of_networks = 10 if args.number_of_networks is None else args.number_of_networks
     k = 50 if args.k is None else args.k
     error_graphs = args.error_graphs
     normalization_run = args.normalization_run
-    # normalization_run = False
+    # normalization_run = True
 
 
     sims = 1000 if args.sims is None else args.sims
