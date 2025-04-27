@@ -177,11 +177,11 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
             parameters_normalization = np.array([
                 N, sims, start, k_avg_graph, x, lam, Alpha, Beta, i, tau, Istar,
                 1.0, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
-                graph_std, graph_skewness, third_moment, second_moment])
+                graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
             parameters_normalization_all = np.array([
                 N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar,
                 1.0, prog, dir_path, eps_graph, eps_graph, duartion, Beta,
-                graph_std, graph_skewness, third_moment, second_moment])
+                graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
             np.save('parameters_all.npy', parameters_normalization_all)
             np.save('parameters_{}.npy'.format(i), parameters_normalization)
             export_network_to_csv(G, i)
