@@ -975,7 +975,7 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
     mid_correlation = (low_correlation + high_correlation) / 2 if net_type!='bd' else correlation_factor
     correlation_norm = correlation_factor if correlation_factor!=0 else 2.0
     if N>50:
-        while np.abs(kavg-k_avg_graph)/kavg>0.2 or (np.abs(correlation_factor-correlation_graph)/correlation_norm>0.2):
+        while np.abs(kavg-k_avg_graph)/kavg>0.05 or (np.abs(correlation_factor-correlation_graph)/correlation_norm>0.05):
             if net_type=='ig':
                 wald_mu, wald_lambda = kavg, kavg / epsilon ** 2
                 d = numpy.random.default_rng().wald(wald_mu,wald_lambda,N).astype(int)
