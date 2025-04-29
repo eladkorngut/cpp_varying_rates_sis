@@ -22,8 +22,9 @@ if __name__ == '__main__':
     eps_dout = eps_din
     # measurements = 1000000
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
-    correlation = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
+    # correlation = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
     # correlation = 0.1
+    correlation = np.linspace(0.01, 1.0, 5)
     number_of_networks = 10
     # k = [50]
     k= 50
@@ -98,13 +99,14 @@ if __name__ == '__main__':
 
 
     if heatmap:
-        measurements = np.where(eps_din < 0.2, 1000000, 10000)
+        # measurements = np.where(eps_din < 0.2, 1000000, 10000)
+        measurements = np.where(correlation < 0.2, 1000000, 10000)
         sims = (measurements/number_of_networks).astype(int)
-        loop_over = eps_din
-        duartion = np.linspace(0.01, 5.0, 2)
+        loop_over = correlation
+        duartion = np.linspace(0.01, 2.0, 5)
         for d in duartion:
             for i, j in zip(loop_over, sims):
-                submit_job(N, prog, lam, i, i, correlation, number_of_networks, k,error_graphs, j, tau, start, d,
+                submit_job(N, prog, lam, eps_din, eps_dout, i, number_of_networks, k,error_graphs, j, tau, start, d,
                            strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag, slurm_path,
                            program_path)
     else:
