@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # N = [300,400,500,600,700,800,900,1000,1100,1200,1300,1400]
     N = 1000
     prog = 'gam'
-    lam = 1.2
+    lam = 1.24
     # lam = 1+np.logspace(-2,0,9)
     # lam = np.array([1.5,1.6,1.7,1.8])
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
     # correlation = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
     # correlation = 0.1
-    correlation = np.linspace(0.01, 1.0, 5)
+    correlation = np.linspace(-0.6, 0.6, 5)
     number_of_networks = 10
     # k = [50]
     k= 50
@@ -38,16 +38,16 @@ if __name__ == '__main__':
     start = 50
     # phi = np.linspace(0.01,1.0,2)
     phi = 1.0
-    duartion = 1.0
+    # duartion = 1.0
     # duartion = [0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0]
-    # duartion = np.linspace(0.01,5.0,2)
+    duartion = np.linspace(0.01,2.0,5)
 
     strength = 1.0-phi
     # strength = np.ones(len(phi)) - phi
     error_graphs = False
 
     # Set this flag as needed:
-    normalization_run = True  # Set to True if you want normalization to run
+    normalization_run = False  # Set to True if you want normalization to run
 
     # Create the flag string based on the value of normalization_run
     normalization_run_flag = '--normalization_run' if normalization_run else ''
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     slurm_path = dir_path + '/slurm.serjob python3'
     program_path = dir_path + '/runwesim.py'
     run_mc_simulation = False
-    heatmap = False
+    heatmap = True
 
 
     def submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         measurements = np.where(correlation < 0.2, 1000000, 10000)
         sims = (measurements/number_of_networks).astype(int)
         loop_over = correlation
-        duartion = np.linspace(0.01, 2.0, 5)
+        duartion = np.linspace(0.01, 3.0, 5)
         for d in duartion:
             for i, j in zip(loop_over, sims):
                 submit_job(N, prog, lam, eps_din, eps_dout, i, number_of_networks, k,error_graphs, j, tau, start, d,
