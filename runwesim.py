@@ -60,7 +60,7 @@ def export_network_to_csv(G,netname):
             joint = np.concatenate(([degree],outgoing_neighbors),axis=0)
             outgoing_writer.writerow(joint)
 
-def job_to_cluster(foldername,parameters,Istar,normalization_run,run_diff_graphs):
+def job_to_cluster(foldername,parameters,Istar,normalization_run):
     # This function submit jobs to the cluster with the following program keys:
     # bd: creates a bimodal directed networks and find its mean time to extinction
 
@@ -131,27 +131,14 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,run_diff_graphs
     for i in range(int(number_of_networks)):
         if error_graphs==False:
             if prog!='1d':
-                if run_diff_graphs:
-                    G = rand_networks.configuration_model_undirected_graph_mulit_type(k, eps_din, N, prog, correlation)
-                    graph_degrees = np.array([G.degree(n) for n in G.nodes()])
-                    k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(
-                        graph_degrees)
-                    second_moment, third_moment = np.mean((graph_degrees) ** 2), np.mean((graph_degrees) ** 3)
-                    eps_graph = graph_std / k_avg_graph
-                    largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1,
-                                                                     which='LA',
-                                                                     return_eigenvectors=True)
-                    graph_correlation = nx.degree_assortativity_coefficient(G)
-                else:
-                    G, graph_correlation = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,
-                                                                                                   graph_correlation,
-                                                                                                   0.05, 1000000)
-
-                Beta = float(lam) / largest_eigenvalue[0]
-                parameters = np.array(
-                    [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
-                     dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment,
-                     second_moment, graph_correlation])
+                G = rand_networks.configuration_model_undirected_graph_mulit_type(float(k),float(eps_din),int(N),prog)
+                graph_degrees = np.array([G.degree(n) for n in G.nodes()])
+                k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(graph_degrees)
+                second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
+                eps_graph = graph_std / k_avg_graph
+                # third_moment = graph_skewness * (graph_std ** 3)
+                largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
+                                                                 return_eigenvectors=True)
                 Beta = float(lam) / largest_eigenvalue[0]
                 infile = 'GNull_{}.pickle'.format(i)
                 with open(infile, 'wb') as f:
@@ -268,7 +255,6 @@ if __name__ == '__main__':
     Num_inf = int(x * N)
     Alpha = 1.0 if args.Alpha is None else args.Alpha
     Beta_avg = Alpha * lam / k
-    run_diff_graphs = False
     # run_mc_simulationtion = True
 
 
@@ -278,5 +264,5 @@ if __name__ == '__main__':
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, correlation,error_graphs)
     Istar = (1 - 1/lam) * N
-    job_to_cluster(foldername, parameters, Istar,normalization_run,run_diff_graphs)
+    job_to_cluster(foldername, parameters, Istar,normalization_run)
     # act_as_main(foldername, parameters, Istar, prog)
