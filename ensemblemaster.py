@@ -171,7 +171,7 @@ if __name__ == '__main__':
             infile = 'GNull_{}.pickle'.format(i)
             with open(infile, 'wb') as f:
                 pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
-            nx.write_gpickle(G, infile)
+            # nx.write_gpickle(G, infile)
         graph_correlation = nx.degree_assortativity_coefficient(G)
         parameters = np.array([N,sims,start,k_avg_graph,x,lam,Alpha,Beta,i,tau,Istar,strength,prog,dir_path,eps_graph,
                                eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment,graph_correlation])
