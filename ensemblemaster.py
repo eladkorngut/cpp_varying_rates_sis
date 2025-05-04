@@ -207,8 +207,8 @@ if __name__ == '__main__':
                         [N, j, start, k, x, lam, d, Num_inf, Alpha, number_of_networks, tau, eps_din,
                          eps_dout, strength, prog, Beta_avg, error_graphs, i])
                     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
-                        prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout,
-                        correlation, error_graphs)
+                        prog, N, k, lam, tau, start, d, strength, j, number_of_networks, eps_din, eps_dout,
+                        i, error_graphs)
                     submit_correlation_heatmap(G,foldername,parameters)
 
     else:
