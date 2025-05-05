@@ -145,7 +145,7 @@ if __name__ == '__main__':
         N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs, correlation = parameters
         N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, \
         eps_din, eps_dout, strength, prog, Beta_avg, error_graphs, correlation = \
-            int(N), int(sims), float(start), float(k), float(x), float(lam), float(duartion), int(Num_inf), float(
+            int(N), int(sims), float(start), int(k), float(x), float(lam), float(duartion), int(Num_inf), float(
                 Alpha), int(number_of_networks), float(tau), float(eps_din), float(eps_dout), \
             float(strength), prog, float(Beta_avg), bool(error_graphs), float(correlation)
         graph_degrees = np.array([G.degree(n) for n in G.nodes()])
