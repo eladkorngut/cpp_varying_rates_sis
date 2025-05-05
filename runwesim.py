@@ -248,7 +248,7 @@ if __name__ == '__main__':
     parser.add_argument('--eps_dout', type=float, help='The normalized std (second moment divided by the first) of the out-degree distribution')
     parser.add_argument('--correlation', type=float, help='Correlation parameter')
     parser.add_argument('--number_of_networks', type=int, help='Number of networks')
-    parser.add_argument('--k', type=int, help='Average number of neighbors for each node')
+    parser.add_argument('--k', type=float, help='Average number of neighbors for each node')
     parser.add_argument('--error_graphs', action='store_true', help='Flag for error graphs')
 
     # Parameters for the WE method
