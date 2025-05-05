@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     def submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
                    error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
-                   Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path):
+                   Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,runheatcorrelation=False,infile='GNull.pickle'):
         error_graphs_flag = '--error_graphs' if error_graphs else ''
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
         attempts = 20
@@ -88,7 +88,7 @@ if __name__ == '__main__':
             f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
             f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
             f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
-            f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag}'
+            f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag} {runheatcorrelation} --graph {infile}'
         )
 
         result = 1
@@ -136,12 +136,12 @@ if __name__ == '__main__':
                 backoff_time = min(backoff_time * 2, 1)
                 result = os.system(f'{slurm_path} {program_path} {parameters_path}')
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        slurm_path = dir_path + '/slurm.serjob'
-        program_path = dir_path + '/cwesis.exe'
-        os.mkdir(foldername)
-        os.chdir(foldername)
-        data_path = os.getcwd() + '/'
+        # dir_path = os.path.dirname(os.path.realpath(__file__))
+        # slurm_path = dir_path + '/slurm.serjob'
+        # program_path = dir_path + '/cwesis.exe'
+        # os.mkdir(foldername)
+        # os.chdir(foldername)
+        # data_path = os.getcwd() + '/'
         N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din, eps_dout, strength, prog, Beta_avg, error_graphs, correlation = parameters
         N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, \
         eps_din, eps_dout, strength, prog, Beta_avg, error_graphs, correlation = \
@@ -161,28 +161,34 @@ if __name__ == '__main__':
             [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
              dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
         np.save('parameters_all.npy', parameters)
-        correlation_graph = 2.0 if correlation != 0 else 0.0
+        infile = 'GNull.pickle'
+        # correlation_graph = 2.0 if correlation != 0 else 0.0
+        with open(infile, 'wb') as f:
+            pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
         for i in range(int(number_of_networks)):
-            G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,
-                                                                             correlation_graph, 0.05, 1000000)
-            largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
-                                                             return_eigenvectors=True)
-            Beta = float(lam) / largest_eigenvalue[0]
-            infile = 'GNull_{}.pickle'.format(i)
-            with open(infile, 'wb') as f:
-                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
-            # nx.write_gpickle(G, infile)
-        graph_correlation = nx.degree_assortativity_coefficient(G)
-        parameters = np.array([N,sims,start,k_avg_graph,x,lam,Alpha,Beta,i,tau,Istar,strength,prog,dir_path,eps_graph,
-                               eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment,graph_correlation])
-        np.save('parameters_{}.npy'.format(i), parameters)
-        runwesim.export_network_to_csv(G, i)
-        runwesim.export_parameters_to_csv(parameters,i)
-        path_adj_in = data_path + 'Adjin_{}.txt'.format(i)
-        path_adj_out = data_path + 'Adjout_{}.txt'.format(i)
-        path_parameters = data_path + 'cparameters_{}.txt'.format(i)
-        parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
-        submit_with_retries(slurm_path, program_path, parameters_path, network_index=i)
+            submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
+                       error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
+                       Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,infile)
+        #     G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,
+        #                                                                      correlation_graph, 0.05, 1000000)
+        #     largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
+        #                                                      return_eigenvectors=True)
+        #     Beta = float(lam) / largest_eigenvalue[0]
+        #     infile = 'GNull_{}.pickle'.format(i)
+        #     with open(infile, 'wb') as f:
+        #         pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
+        #     # nx.write_gpickle(G, infile)
+        # graph_correlation = nx.degree_assortativity_coefficient(G)
+        # parameters = np.array([N,sims,start,k_avg_graph,x,lam,Alpha,Beta,i,tau,Istar,strength,prog,dir_path,eps_graph,
+        #                        eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment,graph_correlation])
+        # np.save('parameters_{}.npy'.format(i), parameters)
+        # runwesim.export_network_to_csv(G, i)
+        # runwesim.export_parameters_to_csv(parameters,i)
+        # path_adj_in = data_path + 'Adjin_{}.txt'.format(i)
+        # path_adj_out = data_path + 'Adjout_{}.txt'.format(i)
+        # path_parameters = data_path + 'cparameters_{}.txt'.format(i)
+        # parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
+        # submit_with_retries(slurm_path, program_path, parameters_path, network_index=i)
 
 
 

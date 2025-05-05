@@ -60,7 +60,7 @@ def export_network_to_csv(G,netname):
             joint = np.concatenate(([degree],outgoing_neighbors),axis=0)
             outgoing_writer.writerow(joint)
 
-def job_to_cluster(foldername,parameters,Istar,normalization_run):
+def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelation,graphname):
     # This function submit jobs to the cluster with the following program keys:
     # bd: creates a bimodal directed networks and find its mean time to extinction
 
@@ -93,6 +93,10 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     slurm_path = dir_path +'/slurm.serjob'
     program_path = dir_path +'/cwesis.exe'
+    if runheatcorrelation:
+        with open(graphname, 'rb') as f:
+            G = pickle.load(f)
+        graph_correlation = nx.degree_assortativity_coefficient(G)
     os.mkdir(foldername)
     os.chdir(foldername)
     data_path = os.getcwd() +'/'
@@ -101,8 +105,22 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
     eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation=\
     int(N),int(sims),float(start),float(k),float(x),float(lam),float(duartion),int(Num_inf),float(Alpha),int(number_of_networks),float(tau),float(eps_din),float(eps_dout),\
     float(strength),prog,float(Beta_avg),bool(error_graphs),float(correlation)
-    if 'prog'!='1d':
+    if 'prog'!='1d' and runheatcorrelation==False:
         G = rand_networks.configuration_model_undirected_graph_mulit_type(k,eps_din,N,prog,correlation)
+        graph_degrees = np.array([G.degree(n) for n in G.nodes()])
+        k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
+        second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
+        eps_graph = graph_std / k_avg_graph
+        largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
+                                                         return_eigenvectors=True)
+        Beta = float(lam) / largest_eigenvalue[0]
+        graph_correlation = nx.degree_assortativity_coefficient(G)
+        parameters = np.array(
+            [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
+             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
+        np.save('parameters_all.npy', parameters)
+    elif runheatcorrelation:
+        G, graph_correlation = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,graph_correlation, 0.05, 1000000)
         graph_degrees = np.array([G.degree(n) for n in G.nodes()])
         k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
         second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
@@ -130,7 +148,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
 
     for i in range(int(number_of_networks)):
         if error_graphs==False:
-            if prog!='1d':
+            if prog!='1d' and runheatcorrelation==False:
                 G = rand_networks.configuration_model_undirected_graph_mulit_type(float(k),float(eps_din),int(N),prog)
                 graph_degrees = np.array([G.degree(n) for n in G.nodes()])
                 k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(graph_degrees)
@@ -144,6 +162,28 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run):
                 with open(infile, 'wb') as f:
                     pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 nx.write_gpickle(G, infile)
+            elif runheatcorrelation:
+                with open(graphname, 'rb') as f:
+                    G = pickle.load(f)
+                G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation_factor,
+                                    correlation_graph, 0.05,1000000)
+                graph_degrees = np.array([G.degree(n) for n in G.nodes()])
+                k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(
+                    graph_degrees)
+                second_moment, third_moment = np.mean((graph_degrees) ** 2), np.mean((graph_degrees) ** 3)
+                eps_graph = graph_std / k_avg_graph
+                largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
+                                                                 return_eigenvectors=True)
+                Beta = float(lam) / largest_eigenvalue[0]
+                infile = 'GNull_{}.pickle'.format(i)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
+                graph_correlation = nx.degree_assortativity_coefficient(G)
+                parameters = np.array(
+                    [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
+                     dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment,
+                     second_moment, graph_correlation])
+                np.save('parameters_all.npy', parameters)
             else:
                 G = nx.random_regular_graph(k,N)
                 k_avg_graph, graph_std, graph_skewness = k, 0.0, 0.0
@@ -225,6 +265,8 @@ if __name__ == '__main__':
     parser.add_argument('--run_mc_simulation', action='store_true', help='Flag to run MC simulation')
     parser.add_argument('--short_path', action='store_true', help='Flag to measure mean shortest path')
     parser.add_argument('--normalization_run', action='store_true', help='Flag for running parameter normalization')
+    parser.add_argument('--runheatcorrelation', action='store_true', help='Flag for xuli-soklov graph')
+    parser.add_argument('--graph', type=str, help='graph name')
 
 
     args = parser.parse_args()
@@ -233,6 +275,7 @@ if __name__ == '__main__':
     # Default parameters
     N = 1000 if args.N is None else args.N
     prog = 'gam' if args.prog is None else args.prog
+    graphname = 'GNull.pickle' if args.prog is None else args.graph
     lam = 1.2 if args.lam is None else args.lam
     eps_din = 0.5 if args.eps_din is None else args.eps_din
     eps_dout = 0.5 if args.eps_dout is None else args.eps_dout
@@ -241,6 +284,8 @@ if __name__ == '__main__':
     k = 50 if args.k is None else args.k
     error_graphs = args.error_graphs
     normalization_run = args.normalization_run
+    # runheatcorrelation = args.runheatcorrelation
+    runheatcorrelation = True
     # normalization_run = True
 
 
@@ -260,9 +305,9 @@ if __name__ == '__main__':
 
     parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
                            eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
-    graphname = 'GNull'
+    graphname = 'GNull.pickle'
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, correlation,error_graphs)
     Istar = (1 - 1/lam) * N
-    job_to_cluster(foldername, parameters, Istar,normalization_run)
+    job_to_cluster(foldername, parameters, Istar,normalization_run,runheatcorrelation,graphname)
     # act_as_main(foldername, parameters, Istar, prog)
