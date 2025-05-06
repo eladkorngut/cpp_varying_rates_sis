@@ -98,7 +98,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
             G = pickle.load(f)
         graph_correlation = nx.degree_assortativity_coefficient(G)
     if not os.path.exists(foldername):
-        os.mkdir(norm_folder)
+        os.mkdir(foldername)
     # os.mkdir(foldername)
     os.chdir(foldername)
     data_path = os.getcwd() +'/'
