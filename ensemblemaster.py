@@ -33,7 +33,7 @@ if __name__ == '__main__':
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
     # correlation = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
     # correlation = 0.1
-    correlation = np.linspace(-0.6, 0.6, 5)
+    correlation = np.linspace(-0.6, 0.6, 2)
     number_of_networks = 10
     # k = [50]
     k= 50
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     phi = 1.0
     # duartion = 1.0
     # duartion = [0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0]
-    duartion = np.linspace(0.01,2.0,5)
+    duartion = np.linspace(0.01,2.0,2)
 
     strength = 1.0-phi
     # strength = np.ones(len(phi)) - phi

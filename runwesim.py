@@ -250,13 +250,13 @@ if __name__ == '__main__':
     parser.add_argument('--eps_dout', type=float, help='The normalized std (second moment divided by the first) of the out-degree distribution')
     parser.add_argument('--correlation', type=float, help='Correlation parameter')
     parser.add_argument('--number_of_networks', type=int, help='Number of networks')
-    parser.add_argument('--k', type=float, help='Average number of neighbors for each node')
+    parser.add_argument('--k', type=int, help='Average number of neighbors for each node')
     parser.add_argument('--error_graphs', action='store_true', help='Flag for error graphs')
 
     # Parameters for the WE method
     parser.add_argument('--sims', type=int, help='Number of simulations at each bin')
-    parser.add_argument('--tau', type=float, help='Tau parameter')
-    parser.add_argument('--start', type=float, help='The time for which the catastrophe starts')
+    parser.add_argument('--tau', type=int, help='Tau parameter')
+    parser.add_argument('--start', type=int, help='The time for which the catastrophe starts')
     parser.add_argument('--duartion', type=float, help='The duration, how long does the catstrophe lasts')
     parser.add_argument('--strength', type=float, help='By how much the decline in Beta, how strong is the catastrophe')
 
