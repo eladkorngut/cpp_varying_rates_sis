@@ -87,14 +87,25 @@ if __name__ == '__main__':
         error_graphs_flag = '--error_graphs' if error_graphs else ''
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
         attempts = 20
+        error_graphs_flag = '--error_graphs' if error_graphs else ''
+        run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
+        runheat_flag = '--runheatcorrelation' if runheatcorrelation else ''
+
         command = (
-            f'{slurm_path} {program_path} --N {N} --prog {prog} --lam {lam} --eps_din {eps_din} '
-            f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
-            f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
-            f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
-            f'--Alpha {Alpha} {run_mc_simulation_flag} '
-            f'{normalization_run_flag} {runheatcorrelation}'
-            f' --graphname {infile}'
+            f"{slurm_path} {program_path}"
+            f" --N {N} --prog {prog} --lam {lam}"
+            f" --eps_din {eps_din} --eps_dout {eps_dout}"
+            f" --correlation {correlation}"
+            f" --number_of_networks {number_of_networks} --k {k}"
+            f" {error_graphs_flag}"
+            f" --sims {sims} --tau {tau} --start {start}"
+            f" --duartion {duartion} --strength {strength}"
+            f" --relaxation_time {relaxation_time}"
+            f" --x {x} --Alpha {Alpha}"
+            f" {run_mc_simulation_flag}"
+            f" {normalization_run_flag}"
+            f" {runheat_flag}"
+            f" --graphname {infile}"
         )
 
         result = 1
