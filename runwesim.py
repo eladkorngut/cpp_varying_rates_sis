@@ -254,7 +254,7 @@ if __name__ == '__main__':
     # Parameters for the WE method
     parser.add_argument('--sims', type=int, help='Number of simulations at each bin')
     parser.add_argument('--tau', type=float, help='Tau parameter')
-    parser.add_argument('--start', type=int, help='The time for which the catastrophe starts')
+    parser.add_argument('--start', type=float, help='The time for which the catastrophe starts')
     parser.add_argument('--duartion', type=float, help='The duration, how long does the catstrophe lasts')
     parser.add_argument('--strength', type=float, help='By how much the decline in Beta, how strong is the catastrophe')
 
