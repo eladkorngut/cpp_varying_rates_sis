@@ -266,7 +266,7 @@ if __name__ == '__main__':
     parser.add_argument('--short_path', action='store_true', help='Flag to measure mean shortest path')
     parser.add_argument('--normalization_run', action='store_true', help='Flag for running parameter normalization')
     parser.add_argument('--runheatcorrelation', action='store_true', help='Flag for xuli-soklov graph')
-    parser.add_argument('--graph', type=str, help='graph name')
+    parser.add_argument('--graphname', type=str, help='graph name')
 
 
     args = parser.parse_args()
@@ -275,7 +275,7 @@ if __name__ == '__main__':
     # Default parameters
     N = 1000 if args.N is None else args.N
     prog = 'gam' if args.prog is None else args.prog
-    graphname = 'GNull.pickle' if args.prog is None else args.graph
+    graphname = 'GNull.pickle' if args.graphname is None else args.graphname
     lam = 1.2 if args.lam is None else args.lam
     eps_din = 0.5 if args.eps_din is None else args.eps_din
     eps_dout = 0.5 if args.eps_dout is None else args.eps_dout
@@ -305,7 +305,6 @@ if __name__ == '__main__':
 
     parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
                            eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
-    graphname = 'GNull.pickle'
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, correlation,error_graphs)
     Istar = (1 - 1/lam) * N
