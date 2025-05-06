@@ -87,6 +87,12 @@ if __name__ == '__main__':
         error_graphs_flag = '--error_graphs' if error_graphs else ''
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
         attempts = 20
+
+        k = int(k)
+        tau = int(tau)
+        start = int(start)
+        sims = int(sims)
+
         error_graphs_flag = '--error_graphs' if error_graphs else ''
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
         runheat_flag = '--runheatcorrelation' if runheatcorrelation else ''
