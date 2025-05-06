@@ -79,7 +79,11 @@ if __name__ == '__main__':
 
     def submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
                    error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
-                   Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,runheatcorrelation=False,infile='GNull.pickle'):
+                   Alpha, run_mc_simulation, normalization_run_flag,
+                   slurm_path='',
+                   program_path='',
+                   runheatcorrelation=True,
+                   infile='GNull.pickle'):
         error_graphs_flag = '--error_graphs' if error_graphs else ''
         run_mc_simulation_flag = '--run_mc_simulation' if run_mc_simulation else ''
         attempts = 20
@@ -108,7 +112,7 @@ if __name__ == '__main__':
                 print(f"Failed to submit job for eps_din={eps_din} after {attempts} attempts. Skipping.")
                 break
 
-    def submit_correlation_heatmap(G,foldername,parameters):
+    def submit_correlation_heatmap(G,correlation_heat_map,parameters):
 
         def submit_with_retries(slurm_path, program_path, parameters_path, network_index=None, normalization=False):
             retry_count = 0
@@ -168,7 +172,8 @@ if __name__ == '__main__':
         for i in range(int(number_of_networks)):
             submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
                        error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
-                       Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,infile)
+                       Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,
+                       correlation_heat_map,infile)
         #     G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,
         #                                                                      correlation_graph, 0.05, 1000000)
         #     largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
@@ -212,10 +217,7 @@ if __name__ == '__main__':
                     parameters = np.array(
                         [N, j, start, k, x, lam, d, Num_inf, Alpha, number_of_networks, tau, eps_din,
                          eps_dout, strength, prog, Beta_avg, error_graphs, i])
-                    foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
-                        prog, N, k, lam, tau, start, d, strength, j, number_of_networks, eps_din, eps_dout,
-                        i, error_graphs)
-                    submit_correlation_heatmap(G,foldername,parameters)
+                    submit_correlation_heatmap(G,correlation_heat_map,parameters)
 
     else:
         measurements = 1000000
