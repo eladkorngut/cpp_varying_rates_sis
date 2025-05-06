@@ -92,7 +92,9 @@ if __name__ == '__main__':
             f'--eps_dout {eps_dout} --correlation {correlation} --number_of_networks {number_of_networks} '
             f'--k {k} {error_graphs_flag} --sims {sims} --tau {tau} --start {start} --duartion {duartion} '
             f'--strength {strength} --relaxation_time {relaxation_time} --x {x} '
-            f'--Alpha {Alpha} {run_mc_simulation_flag} {normalization_run_flag} {runheatcorrelation} --graphname {infile}'
+            f'--Alpha {Alpha} {run_mc_simulation_flag} '
+            f'{normalization_run_flag} {runheatcorrelation}'
+            f' --graphname {infile}'
         )
 
         result = 1
