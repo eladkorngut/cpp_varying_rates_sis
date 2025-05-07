@@ -304,8 +304,32 @@ if __name__ == '__main__':
     # run_mc_simulationtion = True
 
 
-    parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
-                           eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
+    # parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
+    #                        eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
+
+    parameters = [
+        int(N),                   # --N
+        int(sims),                # --sims
+        int(start),               # --start
+        int(k),                   # --k
+        float(x),                 # --x
+        float(lam),               # --lam
+        float(duartion),          # --duartion
+        int(Num_inf),             # seed
+        float(Alpha),             # --Alpha
+        int(number_of_networks),  # --number_of_networks
+        float(tau),               # --tau
+        float(eps_din),           # --eps_din
+        float(eps_dout),          # --eps_dout
+        float(strength),          # --strength
+        prog,                     # --prog  (string)
+        float(Beta_avg),          # computed Beta
+        int(error_graphs),        # 0 or 1
+        float(correlation)        # --correlation
+    ]
+
+
+
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, correlation,error_graphs)
     Istar = (1 - 1/lam) * N

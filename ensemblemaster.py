@@ -221,7 +221,7 @@ if __name__ == '__main__':
         measurements = np.where(correlation < 0.2, 1000000, 10000)
         sims = (measurements/number_of_networks).astype(int)
         loop_over = correlation
-        duartion = np.linspace(0.01, 3.0, 5)
+        duartion = np.linspace(0.01, 3.0, 2)
         if correlation_heat_map:
             G = rand_networks.configuration_model_undirected_graph_mulit_type(k, eps_din, N, prog, 0.0)
         for d in duartion:
