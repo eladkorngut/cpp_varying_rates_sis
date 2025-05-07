@@ -9,51 +9,15 @@ import argparse
 import time
 from scipy.sparse.linalg import eigsh
 
-# def export_parameters_to_csv(parameters,network_number):
-#     name_parameters = 'cparameters_{}.txt'.format(network_number)
-#     # N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,eps_din, eps_dout, new_trajcetory_bin, prog, Beta_avg,dir_path = parameters
-#     # cparameters=[N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,new_trajcetory_bin, prog, Beta_avg,dir_path]
-#     f =open(name_parameters,'+a')
-#     with f:
-#         writer = csv.writer(f)
-#         writer.writerow(parameters)
-#     f.close()
-
-import os
-import csv
-
-def export_parameters_to_csv(parameters, network_number):
-    name_parameters = f'cparameters_{network_number}.txt'
-    # 1) Turn into a plain Python list
-    par = parameters.tolist() if hasattr(parameters, 'tolist') else list(parameters)
-
-    # 2) Re-order and cast exactly as your C++ expects
-    row = [
-        int(float(par[0])),    # N
-        int(float(par[1])),    # sims
-        int(float(par[2])),    # start
-        int(float(par[3])),    # k
-        float(par[4]),         # x
-        float(par[5]),         # lam
-        float(par[8]),         # Alpha
-        float(par[15]),        # Beta_avg
-        network_number,        # network_number
-        float(par[10]),        # tau
-        int(float(par[7])),    # mf_solution (or seed)
-        float(par[13]),        # strength
-        par[14],               # prog (string)
-        os.getcwd(),           # dir_path
-        float(par[11]),        # eps_din
-        float(par[12]),        # eps_dout
-        float(par[6]),         # duration
-        float(par[17])         # correlation (or beta_cat)
-    ]
-
-    # 3) Append to the CSV
-    with open(name_parameters, 'a', newline='') as f:
-        csv.writer(f).writerow(row)
-
-
+def export_parameters_to_csv(parameters,network_number):
+    name_parameters = 'cparameters_{}.txt'.format(network_number)
+    # N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,eps_din, eps_dout, new_trajcetory_bin, prog, Beta_avg,dir_path = parameters
+    # cparameters=[N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,new_trajcetory_bin, prog, Beta_avg,dir_path]
+    f =open(name_parameters,'+a')
+    with f:
+        writer = csv.writer(f)
+        writer.writerow(parameters)
+    f.close()
 
 def export_network_to_csv(G,netname):
     # Open a CSV file for writing incoming neighbors
