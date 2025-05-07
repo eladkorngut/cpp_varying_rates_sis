@@ -9,15 +9,48 @@ import argparse
 import time
 from scipy.sparse.linalg import eigsh
 
-def export_parameters_to_csv(parameters,network_number):
-    name_parameters = 'cparameters_{}.txt'.format(network_number)
-    # N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,eps_din, eps_dout, new_trajcetory_bin, prog, Beta_avg,dir_path = parameters
-    # cparameters=[N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,new_trajcetory_bin, prog, Beta_avg,dir_path]
-    f =open(name_parameters,'+a')
-    with f:
-        writer = csv.writer(f)
-        writer.writerow(parameters)
-    f.close()
+# def export_parameters_to_csv(parameters,network_number):
+#     name_parameters = 'cparameters_{}.txt'.format(network_number)
+#     # N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,eps_din, eps_dout, new_trajcetory_bin, prog, Beta_avg,dir_path = parameters
+#     # cparameters=[N, sims, it, k, x, lam, jump, Alpha,Beta,number_of_networks, tau, mf_solution ,new_trajcetory_bin, prog, Beta_avg,dir_path]
+#     f =open(name_parameters,'+a')
+#     with f:
+#         writer = csv.writer(f)
+#         writer.writerow(parameters)
+#     f.close()
+
+def export_parameters_to_csv(parameters, network_number):
+    name_parameters = f'cparameters_{network_number}.txt'
+    # 1) Turn whatever you got into a plain Python list:
+    par = parameters.tolist() if hasattr(parameters, 'tolist') else list(parameters)
+
+    # 2) Re-order and cast exactly in the sequence your C++ reader expects:
+    row = [
+        int(par[0]),        # N
+        int(par[1]),        # sims
+        int(par[2]),        # start
+        int(par[3]),        # k
+        float(par[4]),      # x
+        float(par[5]),      # lam
+        float(par[8]),      # Alpha
+        float(par[15]),     # Beta_avg
+        network_number,     # network_number (the loop index)
+        float(par[10]),     # tau
+        float(par[7]),      # mf_solution (or Num_inf if that’s what you intend)
+        float(par[13]),     # strength
+        par[14],            # prog (string)
+        os.getcwd(),        # dir_path
+        float(par[11]),     # eps_din
+        float(par[12]),     # eps_dout
+        float(par[6]),      # duration
+        float(par[17])      # correlation (or beta_cat)
+    ]
+
+    # 3) Write the perfectly typed, properly ordered row
+    with open(name_parameters, 'a', newline='') as f:
+        csv.writer(f).writerow(row)
+
+
 
 def export_network_to_csv(G,netname):
     # Open a CSV file for writing incoming neighbors
@@ -304,32 +337,8 @@ if __name__ == '__main__':
     # run_mc_simulationtion = True
 
 
-    # parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
-    #                        eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
-
-    parameters = [
-        int(N),                   # --N
-        int(sims),                # --sims
-        int(start),               # --start
-        int(k),                   # --k
-        float(x),                 # --x
-        float(lam),               # --lam
-        float(duartion),          # --duartion
-        int(Num_inf),             # seed
-        float(Alpha),             # --Alpha
-        int(number_of_networks),  # --number_of_networks
-        float(tau),               # --tau
-        float(eps_din),           # --eps_din
-        float(eps_dout),          # --eps_dout
-        float(strength),          # --strength
-        prog,                     # --prog  (string)
-        float(Beta_avg),          # computed Beta
-        int(error_graphs),        # 0 or 1
-        float(correlation)        # --correlation
-    ]
-
-
-
+    parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
+                           eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
         prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, correlation,error_graphs)
     Istar = (1 - 1/lam) * N
