@@ -166,16 +166,16 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
             elif runheatcorrelation:
                 with open(graphname, 'rb') as f:
                     G = pickle.load(f)
-                G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation_factor,
-                                    correlation_graph, 0.05,1000000)
-                graph_degrees = np.array([G.degree(n) for n in G.nodes()])
-                k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(
-                    graph_degrees)
-                second_moment, third_moment = np.mean((graph_degrees) ** 2), np.mean((graph_degrees) ** 3)
-                eps_graph = graph_std / k_avg_graph
-                largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
-                                                                 return_eigenvectors=True)
-                Beta = float(lam) / largest_eigenvalue[0]
+                # G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation_factor,
+                #                     correlation_graph, 0.05,1000000)
+                # graph_degrees = np.array([G.degree(n) for n in G.nodes()])
+                # k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(
+                #     graph_degrees)
+                # second_moment, third_moment = np.mean((graph_degrees) ** 2), np.mean((graph_degrees) ** 3)
+                # eps_graph = graph_std / k_avg_graph
+                # largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
+                #                                                  return_eigenvectors=True)
+                # Beta = float(lam) / largest_eigenvalue[0]
                 infile = 'GNull_{}.pickle'.format(i)
                 with open(infile, 'wb') as f:
                     pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
