@@ -188,11 +188,10 @@ if __name__ == '__main__':
         # correlation_graph = 2.0 if correlation != 0 else 0.0
         with open(infile, 'wb') as f:
             pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
-        for i in range(int(number_of_networks)):
-            submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
-                       error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
-                       Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,
-                       correlation_heat_map,infile)
+        submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,
+                   error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
+                   Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,
+                   correlation_heat_map,infile)
         #     G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,
         #                                                                      correlation_graph, 0.05, 1000000)
         #     largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
