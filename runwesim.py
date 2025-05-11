@@ -106,8 +106,8 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
     eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation=\
     int(N),int(sims),float(start),float(k),float(x),float(lam),float(duartion),int(Num_inf),float(Alpha),int(number_of_networks),float(tau),float(eps_din),float(eps_dout),\
     float(strength),prog,float(Beta_avg),bool(error_graphs),float(correlation)
-    if 'prog'!='1d' and runheatcorrelation==False:
-        G = rand_networks.configuration_model_undirected_graph_mulit_type(k,eps_din,N,prog,correlation)
+    if prog!='1d' and runheatcorrelation==False:
+        G = rand_networks.configuration_model_undirected_graph_mulit_type(k,0.0,N,'homo',0.0)
         graph_degrees = np.array([G.degree(n) for n in G.nodes()])
         k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
         second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
@@ -135,6 +135,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
              dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
         np.save('parameters_all.npy', parameters)
     else:
+        k = int(k)
         G = nx.random_regular_graph(k, N)
         eps_graph = 0
         k_avg_graph,graph_std,graph_skewness = k,0.0,0.0
@@ -275,7 +276,7 @@ if __name__ == '__main__':
 
     # Default parameters
     N = 1000 if args.N is None else args.N
-    prog = 'gam' if args.prog is None else args.prog
+    prog = '1d' if args.prog is None else args.prog
     graphname = 'GNull.pickle' if args.graphname is None else args.graphname
     lam = 1.2 if args.lam is None else args.lam
     eps_din = 0.5 if args.eps_din is None else args.eps_din
@@ -286,7 +287,7 @@ if __name__ == '__main__':
     error_graphs = args.error_graphs
     normalization_run = args.normalization_run
     # runheatcorrelation = args.runheatcorrelation
-    runheatcorrelation = True
+    runheatcorrelation = False
     # normalization_run = True
 
 

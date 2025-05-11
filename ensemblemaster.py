@@ -20,20 +20,20 @@ if __name__ == '__main__':
 
     # N = [300,400,500,600,700,800,900,1000,1100,1200,1300,1400]
     N = 1000
-    prog = 'gam'
-    lam = 1.24
+    prog = '1d'
+    lam = 1.25
     # lam = 1+np.logspace(-2,0,9)
     # lam = np.array([1.5,1.6,1.7,1.8])
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
     # eps_din = [0.0, 0.05, 0.1, 0.15, 0.2]
     # eps_din = np.linspace(0.01, 1.0, 5)
-    eps_din = 0.5
+    eps_din = 0.0
     eps_dout = eps_din
     # measurements = 1000000
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
     # correlation = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
     # correlation = 0.1
-    correlation = np.linspace(-0.6, 0.6, 2)
+    # correlation = np.linspace(-0.6, 0.6, 2)
     number_of_networks = 10
     # k = [50]
     k= 50
@@ -49,14 +49,14 @@ if __name__ == '__main__':
     phi = 1.0
     # duartion = 1.0
     # duartion = [0.0,2.5,5.0,7.5,10.0,12.5,15.0,17.5,20.0]
-    duartion = np.linspace(0.01,2.0,2)
+    duartion = np.linspace(0.01,10.0,20)
 
     strength = 1.0-phi
     # strength = np.ones(len(phi)) - phi
     error_graphs = False
 
     # Set this flag as needed:
-    normalization_run = False  # Set to True if you want normalization to run
+    normalization_run = True  # Set to True if you want normalization to run
 
     # Create the flag string based on the value of normalization_run
     normalization_run_flag = '--normalization_run' if normalization_run else ''
@@ -71,8 +71,8 @@ if __name__ == '__main__':
     slurm_path = dir_path + '/slurm.serjob python3'
     program_path = dir_path + '/runwesim.py'
     run_mc_simulation = False
-    heatmap = True
-    correlation_heat_map = True
+    heatmap = False
+    correlation_heat_map = False
 
     # if correlation_heat_map:
     #     G = rand_networks.configuration_model_undirected_graph_mulit_type(k, eps_din, N, prog,0.0)
@@ -192,27 +192,6 @@ if __name__ == '__main__':
                    error_graphs, sims, tau, start, duartion, strength, relaxation_time, x,
                    Alpha, run_mc_simulation, normalization_run_flag, slurm_path, program_path,
                    correlation_heat_map,infile)
-        #     G, correlation_graph = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,
-        #                                                                      correlation_graph, 0.05, 1000000)
-        #     largest_eigenvalue, largest_eigen_vector = eigsh(nx.adjacency_matrix(G).astype(float), k=1, which='LA',
-        #                                                      return_eigenvectors=True)
-        #     Beta = float(lam) / largest_eigenvalue[0]
-        #     infile = 'GNull_{}.pickle'.format(i)
-        #     with open(infile, 'wb') as f:
-        #         pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
-        #     # nx.write_gpickle(G, infile)
-        # graph_correlation = nx.degree_assortativity_coefficient(G)
-        # parameters = np.array([N,sims,start,k_avg_graph,x,lam,Alpha,Beta,i,tau,Istar,strength,prog,dir_path,eps_graph,
-        #                        eps_graph,duartion,strength*Beta,graph_std,graph_skewness,third_moment,second_moment,graph_correlation])
-        # np.save('parameters_{}.npy'.format(i), parameters)
-        # runwesim.export_network_to_csv(G, i)
-        # runwesim.export_parameters_to_csv(parameters,i)
-        # path_adj_in = data_path + 'Adjin_{}.txt'.format(i)
-        # path_adj_out = data_path + 'Adjout_{}.txt'.format(i)
-        # path_parameters = data_path + 'cparameters_{}.txt'.format(i)
-        # parameters_path = '{} {} {}'.format(path_adj_in,path_adj_out,path_parameters)
-        # submit_with_retries(slurm_path, program_path, parameters_path, network_index=i)
-
 
 
     if heatmap:
@@ -238,11 +217,13 @@ if __name__ == '__main__':
                     submit_correlation_heatmap(G,correlation_heat_map,parameters)
 
     else:
-        measurements = 1000000
+        # measurements = 1000000
+        measurements = np.where(duartion < 1.0, 10000000, 1000000)
+        sims = (measurements/number_of_networks).astype(int)
         # duartion = np.linspace(0.01,2.0,20)
-        sims = int(measurements/number_of_networks)
-        loop_over = correlation
-        for i in loop_over:
-            submit_job(N, prog, lam, eps_din, eps_dout, i, number_of_networks, k,error_graphs, sims, tau,
-                       start, duartion, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
+        # sims = int(measurements/number_of_networks)
+        loop_over = duartion
+        for i,j in (loop_over,sims):
+            submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,error_graphs, j, tau,
+                       start, i, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
                        slurm_path, program_path)
