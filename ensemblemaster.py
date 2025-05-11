@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # measurements = 1000000
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
     # correlation = [-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5]
-    # correlation = 0.1
+    correlation = 0.0
     # correlation = np.linspace(-0.6, 0.6, 2)
     number_of_networks = 10
     # k = [50]
@@ -223,7 +223,7 @@ if __name__ == '__main__':
         # duartion = np.linspace(0.01,2.0,20)
         # sims = int(measurements/number_of_networks)
         loop_over = duartion
-        for i,j in (loop_over,sims):
+        for i,j in zip(loop_over,sims):
             submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,error_graphs, j, tau,
                        start, i, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
                        slurm_path, program_path)
