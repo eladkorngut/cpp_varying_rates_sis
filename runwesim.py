@@ -164,7 +164,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
                 infile = 'GNull_{}.pickle'.format(i)
                 with open(infile, 'wb') as f:
                     pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
-                nx.write_gpickle(G, infile)
+                # nx.write_gpickle(G, infile)
             elif runheatcorrelation:
                 with open(graphname, 'rb') as f:
                     G = pickle.load(f)
