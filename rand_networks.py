@@ -344,6 +344,210 @@ def random_bimodal_directed_graph(d1_in,d1_out,d2_in,d2_out, n, seed=None):
     G.add_edges_from(edges)
     return G
 
+
+def create_correlation_bimodal(degrees, alpha):
+    nodes_per_degree = [np.where(degrees == degree_i)[0] for degree_i in range(max(degrees)+1)]
+    final_pair_list = []
+
+    def _suitable(edges, potential_edges):
+    # Helper subroutine to check if there are suitable edges remaining
+    # If False, the generation of the graph has failed
+        if not potential_edges:
+            return True
+        for s1 in potential_edges:
+            for s2 in potential_edges:
+                # Two iterators on the same dictionary are guaranteed
+                # to visit it in the same order if there are no
+                # intervening modifications.
+                if s1 == s2:
+                    # Only need to consider s1-s2 pair one time
+                    break
+                if s1 > s2:
+                    s1, s2 = s2, s1
+                if (s1, s2) not in edges:
+                    return True
+        return False
+
+    def _try_creation(stubs):
+        # Attempt to create an edge set
+
+        edges = set()
+        while stubs:
+            potential_edges = defaultdict(lambda: 0)
+            random.shuffle(stubs)
+            stubiter = iter(stubs)
+            for s1, s2 in zip(stubiter, stubiter):
+                if s1 > s2:
+                    s1, s2 = s2, s1
+                if s1 != s2 and ((s1, s2) not in edges):
+                    edges.add((s1, s2))
+                else:
+                    potential_edges[s1] += 1
+                    potential_edges[s2] += 1
+
+            if not _suitable(edges, potential_edges):
+                return None # failed to find suitable edge set
+
+            stubs = [node for node, potential in potential_edges.items()
+                     for _ in range(potential)]
+        return edges
+
+    # number_of_nodes_per_degree = np.rint(self.p_k(range(self.network_size), *self.dist_args) * n).astype(int)
+
+    for i, nodes_i in enumerate(nodes_per_degree):
+        if len(nodes_i) <= 1:
+            continue
+        int_node_number = int(np.round(i * alpha))
+        if int_node_number == 0:
+            continue
+        available_edges = nodes_i.tolist() * int_node_number
+        edges = _try_creation(available_edges)
+        while edges is None:
+            edges =_try_creation(available_edges)
+        # pair_set = list(zip(available_edges[::2], available_edges[1::2]))
+        # pair_set = [(x,y) for x, y in pair_set if x != y]
+        # pair_set = [(x,y) if x < y else (y, x) for x, y in pair_set]
+        # pair_set = np.unique(pair_set, axis=0)
+        for x, y in edges:
+            degrees[x] -= 1
+            degrees[y] -= 1
+
+        final_pair_list.extend(edges)
+        # final_pair_list.extend(edges.tolist())
+
+    return degrees, final_pair_list
+
+
+def random_bimodal_assortative_graph(d1,d2, n, alpha,seed=None):
+    """Return a random bimodal graph of n nodes each with degree d1 and d2.
+        the degree distubition is half for each one of the two degrees
+
+    The resulting graph G has no self-loops or parallel edges.
+
+    Parameters
+    ----------
+    d1 : int
+      Degre
+    d2 : int
+      Degree
+    n : integer
+      Number of nodes. The value of n*d must be even.
+    seed : hashable object
+        The seed for random number generator.
+
+    Notes
+    -----
+    The nodes are numbered form 0 to n-1.
+
+    Kim and Vu's paper [2]_ shows that this algorithm samples in an
+    asymptotically uniform way from the space of random graphs when
+    d = O(n**(1/3-epsilon)).
+
+    References
+    ----------
+    .. [1] A. Steger and N. Wormald,
+       Generating random regular graphs quickly,
+       Probability and Computing 8 (1999), 377-396, 1999.
+       http://citeseer.ist.psu.edu/steger99generating.html
+
+    .. [2] Jeong Han Kim and Van H. Vu,
+       Generating random regular graphs,
+       Proceedings of the thirty-fifth ACM symposium on Theory of computing,
+       San Diego, CA, USA, pp 213--222, 2003.
+       http://portal.acm.org/citation.cfm?id=780542.780576
+
+       The multiplcation of n*d1 and n*d2 needs to be even. For the safe side choose even number for both nodes and degree
+    """
+
+    if (n * d1) % 2 != 0 or (n * d2) % 2!=0:
+        raise nx.NetworkXError("n * d must be even")
+
+    if not (0 <= d1 < n or 0 <= d2 < n):
+        raise nx.NetworkXError("the 0 <= d < n inequality must be satisfied")
+
+    if d1 == 0 or d2 == 0:
+        return nx.empty_graph(n)
+
+    if seed is not None:
+        random.seed(seed)
+
+    def _suitable(edges, potential_edges):
+    # Helper subroutine to check if there are suitable edges remaining
+    # If False, the generation of the graph has failed
+        if not potential_edges:
+            return True
+        for s1 in potential_edges:
+            for s2 in potential_edges:
+                # Two iterators on the same dictionary are guaranteed
+                # to visit it in the same order if there are no
+                # intervening modifications.
+                if s1 == s2:
+                    # Only need to consider s1-s2 pair one time
+                    break
+                if s1 > s2:
+                    s1, s2 = s2, s1
+                if (s1, s2) not in edges:
+                    return True
+        return False
+
+    def _try_creation(n,G):
+        # Attempt to create an edge set
+        # Shuffle the array to randomize the order
+        # edges = [tuple(sublist) for sublist in edges]
+
+        stub_d1=random.sample(list(range(n)),int(n/2))
+        stub_d2= [item for item in list(range(n)) if item not in stub_d1]
+
+        # Create the vector d
+        d = np.zeros(n, dtype=int)
+        d[stub_d1] = d1
+        d[stub_d2] = d2
+
+        d, correlated_nodes = create_correlation_bimodal(d, alpha)
+        G.add_edges_from(correlated_nodes)
+
+        # Create stubs list
+        stubs = []
+        for i in range(n):
+            stubs.extend([i] * d[i])
+
+        edges = set()
+        edges.update(correlated_nodes)
+
+        while stubs:
+            potential_edges = defaultdict(lambda: 0)
+            random.shuffle(stubs)
+            stubiter = iter(stubs)
+            for s1, s2 in zip(stubiter, stubiter):
+                if s1 > s2:
+                    s1, s2 = s2, s1
+                if s1 != s2 and ((s1, s2) not in edges):
+                    edges.add((s1, s2))
+                else:
+                    potential_edges[s1] += 1
+                    potential_edges[s2] += 1
+
+            if not _suitable(edges, potential_edges):
+                return None,G # failed to find suitable edge set
+
+            stubs = [node for node, potential in potential_edges.items()
+                     for _ in range(potential)]
+        return edges,G
+
+    # Even though a suitable edge set exists,
+    # the generation of such a set is not guaranteed.
+    # Try repeatedly to find one.
+    G = nx.Graph()
+    edges,G = _try_creation(n,G)
+    while edges is None:
+        G = nx.Graph()
+        edges,G = _try_creation(n,G)
+
+    G.name = "random_bimodal_graph(%s, %s)" % (d1, n)
+    G.add_edges_from(edges)
+
+    return G
+
 def create_exact_gauss_dis(epsilon,avg_degree,N):
     low, high,normalization = (avg_degree * (1 - 4 * epsilon)).astype(int), (avg_degree * (1 + 4 * epsilon)).astype(int),N
     possible_degrees = np.arange(low, high)
@@ -890,7 +1094,7 @@ def find_multi_k_binary_search(kavg,epsilon,n,net_type):
     return G_mid,(low + high) / 2
 
 
-def xulvi_brunet_sokolov_target_assortativity(G, target_assortativity, current_assortativity,tolerance=0.05, max_iterations=10000):
+def xulvi_brunet_sokolov_target_assortativity(G, target_assortativity, current_assortativity,tolerance=0.05, max_iterations=100000):
     """
     Adjusts the graph G using the Xulvi-Brunet–Sokolov algorithm to achieve a target assortativity.
 
@@ -992,7 +1196,9 @@ def configuration_model_undirected_graph_mulit_type(kavg,epsilon,N,net_type,corr
                 d1_in, d1_out, d2_in, d2_out = int(int(kavg) * (1 - float(epsilon))), int(
                     int(kavg) * (1 - float(epsilon))), int(int(kavg) * (1 + float(epsilon))), int(
                     int(kavg) * (1 + float(epsilon)))
-                G = random_bimodal_graph(d1_in, d2_in, N, seed=None)
+                # G = random_bimodal_graph(d1_in, d2_in, N, seed=None)
+                # if correlation_factor > 0.005:
+                G = random_bimodal_assortative_graph(d1_in,d2_in, N, correlation_factor)
                 # G = random_bimodal_directed_graph(int(d1_in), int(d1_out), int(d2_in), int(d2_out), int(N))
                 return G
             elif net_type=='complete':
@@ -1151,7 +1357,7 @@ if __name__ == '__main__':
     # class CustomDistribution(rv_discrete):
     #     def _pmf(self, k, a, b):
     #         return b * a / (1 + b * k) ** (a + 1)
-    k,epsilon,N,net_type,correlation_factor= 50,0.5,1000,'gam',0.4
+    k,epsilon,N,net_type,correlation_factor= 50,0.5,1000,'bd',0.4
     # G = configuration_model_undirected_graph_gamma(k,epsilon,N)
     G = configuration_model_undirected_graph_mulit_type(k,epsilon,N,net_type,correlation_factor)
     plot_gamma_distribution(G,k,epsilon,N,net_type)

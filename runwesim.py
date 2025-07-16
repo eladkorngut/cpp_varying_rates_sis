@@ -106,6 +106,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
     eps_din, eps_dout, strength, prog, Beta_avg, error_graphs,correlation=\
     int(N),int(sims),float(start),float(k),float(x),float(lam),float(duartion),int(Num_inf),float(Alpha),int(number_of_networks),float(tau),float(eps_din),float(eps_dout),\
     float(strength),prog,float(Beta_avg),bool(error_graphs),float(correlation)
+    error_graphs=False
     if prog!='1d' and runheatcorrelation==False:
         G = rand_networks.configuration_model_undirected_graph_mulit_type(k,0.0,N,'homo',0.0)
         graph_degrees = np.array([G.degree(n) for n in G.nodes()])
@@ -151,7 +152,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
     for i in range(int(number_of_networks)):
         if error_graphs==False:
             if prog!='1d' and runheatcorrelation==False:
-                G = rand_networks.configuration_model_undirected_graph_mulit_type(float(k),float(eps_din),int(N),prog)
+                G = rand_networks.configuration_model_undirected_graph_mulit_type(float(k),float(eps_din),int(N),prog,correlation)
                 graph_degrees = np.array([G.degree(n) for n in G.nodes()])
                 k_avg_graph, graph_std, graph_skewness = np.mean(graph_degrees), np.std(graph_degrees), skew(graph_degrees)
                 second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
@@ -233,7 +234,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
             path_adj_in_norm = data_path_norm + 'Adjin_{}.txt'.format(i)
             path_adj_out_norm = data_path_norm + 'Adjout_{}.txt'.format(i)
             path_parameters_norm = data_path_norm + 'cparameters_{}.txt'.format(i)
-            parameters_path_norm = '{} {} {}'.format(path_adj_in_norm,path_adj_out_norm,path_parameters_norm)
+            parameters_path_norm = '{} {} {}    '.format(path_adj_in_norm,path_adj_out_norm,path_parameters_norm)
             submit_with_retries(slurm_path, program_path, parameters_path_norm, network_index=i, normalization=True)
             os.chdir(data_path)
         # os.system('{} {} {} {}'.format(program_path,path_adj_in,path_adj_out,path_parameters))
@@ -276,15 +277,16 @@ if __name__ == '__main__':
 
     # Default parameters
     N = 1000 if args.N is None else args.N
-    prog = '1d' if args.prog is None else args.prog
+    prog = 'gam' if args.prog is None else args.prog
     graphname = 'GNull.pickle' if args.graphname is None else args.graphname
     lam = 1.2 if args.lam is None else args.lam
     eps_din = 0.5 if args.eps_din is None else args.eps_din
     eps_dout = 0.5 if args.eps_dout is None else args.eps_dout
-    correlation = -0.1 if args.correlation is None else args.correlation
+    correlation = 0.1 if args.correlation is None else args.correlation
     number_of_networks = 10 if args.number_of_networks is None else args.number_of_networks
     k = 50 if args.k is None else args.k
-    error_graphs = args.error_graphs
+    # error_graphs = args.error_graphs
+    error_graphs = False
     normalization_run = args.normalization_run
     # runheatcorrelation = args.runheatcorrelation
     runheatcorrelation = False
@@ -308,7 +310,7 @@ if __name__ == '__main__':
     parameters = np.array([N, sims, start, k, x, lam, duartion, Num_inf, Alpha, number_of_networks, tau, eps_din,
                            eps_dout, strength, prog, Beta_avg, error_graphs,correlation])
     foldername = 'prog_{}_N{}_k_{}_R_{}_tau_{}_start_{}_duartion_{}_strength_{}_sims_{}_net_{}_epsin_{}_epsout_{}_correlation_{}_err_{}'.format(
-        prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, correlation,error_graphs)
+        prog, N, k, lam, tau, start, duartion, strength, sims, number_of_networks, eps_din, eps_dout, correlation,False)
     Istar = (1 - 1/lam) * N
     job_to_cluster(foldername, parameters, Istar,normalization_run,runheatcorrelation,graphname)
     # act_as_main(foldername, parameters, Istar, prog)
