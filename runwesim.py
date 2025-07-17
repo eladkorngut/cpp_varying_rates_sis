@@ -119,7 +119,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
         graph_correlation = nx.degree_assortativity_coefficient(G)
         parameters = np.array(
             [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
-             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
+             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation,number_of_networks])
         np.save('parameters_all.npy', parameters)
     elif runheatcorrelation:
         G, graph_correlation = rand_networks.xulvi_brunet_sokolov_target_assortativity(G, correlation,graph_correlation, 0.05, 1000000)
@@ -133,7 +133,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
         graph_correlation = nx.degree_assortativity_coefficient(G)
         parameters = np.array(
             [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
-             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
+             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation,number_of_networks])
         np.save('parameters_all.npy', parameters)
     else:
         k = int(k)
@@ -146,7 +146,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
         Beta = Beta_graph
         parameters = np.array(
             [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
-             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation])
+             dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment, second_moment,graph_correlation,number_of_networks])
         np.save('parameters_all.npy', parameters)
 
     for i in range(int(number_of_networks)):
@@ -185,7 +185,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
                 parameters = np.array(
                     [N, sims, start, k_avg_graph, x, lam, Alpha, Beta, tau, Istar, strength, prog,
                      dir_path, eps_graph, eps_graph, duartion, strength * Beta, graph_std, graph_skewness, third_moment,
-                     second_moment, graph_correlation])
+                     second_moment, graph_correlation,number_of_networks])
                 np.save('parameters_all.npy', parameters)
             else:
                 G = nx.random_regular_graph(k,N)
