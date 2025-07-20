@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # N = [300,400,500,600,700,800,900,1000,1100,1200,1300,1400]
     N = 1000
     prog = 'bd'
-    lam = 1.75
+    lam = 1.6
     # lam = 1+np.logspace(-2,0,9)
     # lam = np.array([1.5,1.6,1.7,1.8])
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
