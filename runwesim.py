@@ -108,7 +108,7 @@ def job_to_cluster(foldername,parameters,Istar,normalization_run,runheatcorrelat
     float(strength),prog,float(Beta_avg),bool(error_graphs),float(correlation)
     error_graphs=False
     if prog!='1d' and runheatcorrelation==False:
-        G = rand_networks.configuration_model_undirected_graph_mulit_type(k,0.0,N,'homo',0.0)
+        G = rand_networks.configuration_model_undirected_graph_mulit_type(k,eps_din,N,prog,correlation)
         graph_degrees = np.array([G.degree(n) for n in G.nodes()])
         k_avg_graph,graph_std,graph_skewness = np.mean(graph_degrees),np.std(graph_degrees),skew(graph_degrees)
         second_moment,third_moment = np.mean((graph_degrees)**2),np.mean((graph_degrees)**3)
