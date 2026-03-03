@@ -223,7 +223,7 @@ if __name__ == '__main__':
         # measurements = 1000000
         # duartion = np.linspace(0.01,2.0,20)
         # sims = int(measurements/number_of_networks)
-        loop_over = N
+        loop_over = np.array(N)
         measurements = np.where(loop_over < 1.0, 1000, 1000)
         sims = (measurements/number_of_networks).astype(int)
         for i,j in zip(loop_over,sims):
