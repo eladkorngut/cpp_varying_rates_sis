@@ -17,9 +17,7 @@ if __name__ == '__main__':
 
     # Netwrok parameters
 
-    # N = [300,400,500,600,700,800,900,1000,1100,1200,1300,1400]
-    # N = 1000
-    N = [500, 900]
+    N = 1000
     prog = 'bd'
     lam = 1.2
     # lam = 1+np.logspace(-2,0,9)
@@ -27,7 +25,7 @@ if __name__ == '__main__':
     # eps_din = np.random.uniform(0.0, 3.0,measurements)
     # eps_din = [0.0, 0.05, 0.1, 0.15, 0.2]
     # eps_din = np.linspace(0.01, 1.0, 5)
-    eps_din = 0.0
+    eps_din = 0.5
     eps_dout = eps_din
     # measurements = 1000000
     # correlation = [-0.01,-0.03,-0.05,-0.08,-0.1,-0.12,-0.15,-0.18,-0.2,-0.25,-0.3]
@@ -44,10 +42,10 @@ if __name__ == '__main__':
     relaxation_time = 20
     # sims = (measurements/number_of_networks).astype(int)
     # sims = int(measurements/number_of_networks)
-    # tau = 100
-    tau = int(1e20)
+    tau = [30, 60, 90, 120, 150, 180, 210, 240]
+    # tau = int(1e20)
     # tau = np.linspace(0.1,2.0,20)
-    start = 50
+    start = 20
     # phi = np.linspace(0.01,1.0,2)
     phi = 1.0
     duartion = 2.0
@@ -220,13 +218,9 @@ if __name__ == '__main__':
                     submit_correlation_heatmap(G,correlation_heat_map,parameters)
 
     else:
-        # measurements = 1000000
-        # duartion = np.linspace(0.01,2.0,20)
-        # sims = int(measurements/number_of_networks)
-        loop_over = np.array(N)
-        measurements = np.where(loop_over < 1.0, 1000, 1000)
-        sims = (measurements/number_of_networks).astype(int)
-        for i,j in zip(loop_over,sims):
-            submit_job(i, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k,error_graphs, j, tau,
-                       start, duartion, strength, relaxation_time, x,Alpha, run_mc_simulation, normalization_run_flag,
+        measurements = 1000000
+        sims = int(measurements / number_of_networks)
+        for t in tau:
+            submit_job(N, prog, lam, eps_din, eps_dout, correlation, number_of_networks, k, error_graphs, sims, t,
+                       start, duartion, strength, relaxation_time, x, Alpha, run_mc_simulation, normalization_run_flag,
                        slurm_path, program_path)
